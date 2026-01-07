@@ -3,8 +3,8 @@
     "type": "float",
     "initial_value": 20.0,
     "simulate": true,
-    "simulation_type":  "random",
-    "min":  15.0,
+    "simulation_type": "random",
+    "min": 15.0,
     "max": 25.0,
     "description": "Ambient temperature in Celsius"
   },
@@ -17,10 +17,10 @@
     "max": 103.0,
     "description": "System pressure in kPa"
   },
-  "Flow":  {
+  "Flow": {
     "type": "float",
-    "initial_value":  50.0,
-    "simulate":  true,
+    "initial_value": 50.0,
+    "simulate": true,
     "simulation_type": "random",
     "min": 40.0,
     "max": 60.0,
@@ -29,11 +29,11 @@
   "FlowRate": {
     "type": "float",
     "initial_value": 100.0,
-    "simulate":  true,
+    "simulate": true,
     "simulation_type": "sine",
     "amplitude": 20.0,
-    "offset":  100.0,
-    "period":  30,
+    "offset": 100.0,
+    "period": 30,
     "description": "Flow rate with sine wave pattern"
   },
   "Counter": {
@@ -75,7 +75,7 @@
   "AlarmActive": {
     "type": "bool",
     "initial_value": false,
-    "simulate":  true,
+    "simulate": true,
     "description": "Random alarm state"
   }
 }

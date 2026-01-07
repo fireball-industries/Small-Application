@@ -18,30 +18,30 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Check if running as root
-if [ "$EUID" -eq 0 ]; then 
-    echo -e "${YELLOW}Warning: Running as root.  Consider running as a regular user.${NC}"
+if [ "$EUID" -eq 0 ]; then
+    echo -e "${YELLOW}Warning: Running as root. Consider running as a regular user.${NC}"
 fi
 
 # Install directory
 INSTALL_DIR="${INSTALL_DIR:-/opt/opcua-server}"
 
-echo -e "${GREEN}Installing to:  $INSTALL_DIR${NC}"
+echo -e "${GREEN}Installing to: $INSTALL_DIR${NC}"
 echo ""
 
 # Check for Python 3
 echo "Checking for Python 3..."
-if !  command -v python3 &> /dev/null; then
+if ! command -v python3 &> /dev/null; then
     echo -e "${YELLOW}Python 3 not found. Installing...${NC}"
     sudo apt update
     sudo apt install -y python3 python3-pip
 else
-    echo -e "${GREEN}Python 3 found:  $(python3 --version)${NC}"
+    echo -e "${GREEN}Python 3 found: $(python3 --version)${NC}"
 fi
 
 # Check for pip
 echo "Checking for pip..."
 if ! command -v pip3 &> /dev/null; then
-    echo -e "${YELLOW}pip not found.  Installing...${NC}"
+    echo -e "${YELLOW}pip not found. Installing...${NC}"
     sudo apt install -y python3-pip
 else
     echo -e "${GREEN}pip found: $(pip3 --version)${NC}"
@@ -53,7 +53,7 @@ sudo mkdir -p "$INSTALL_DIR"
 
 # Copy files
 echo "Copying application files..."
-sudo cp opcua_server. py "$INSTALL_DIR/"
+sudo cp opcua_server.py "$INSTALL_DIR/"
 sudo cp tags_config.json "$INSTALL_DIR/"
 sudo cp requirements.txt "$INSTALL_DIR/"
 
@@ -70,7 +70,7 @@ if [ -f "systemd/opcua-server.service" ]; then
     sudo cp systemd/opcua-server.service /etc/systemd/system/
     sudo sed -i "s|/opt/opcua-server|$INSTALL_DIR|g" /etc/systemd/system/opcua-server.service
     sudo systemctl daemon-reload
-    sudo systemctl enable opcua-server. service
+    sudo systemctl enable opcua-server.service
     echo -e "${GREEN}Systemd service installed and enabled${NC}"
 fi
 

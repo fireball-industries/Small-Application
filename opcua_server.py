@@ -3,7 +3,7 @@
 OPC UA Server for Ignition Edge
 A configurable OPC UA server that simulates industrial tags with various data types. 
 
-Author: Your Friendly Neighborhood Automation Engineer
+Author: Your Friendly Neighborhood Engineer
 License: MIT
 """
 

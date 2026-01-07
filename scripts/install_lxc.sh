@@ -20,7 +20,7 @@ NC='\033[0m'
 
 # Check if LXC is installed
 if ! command -v lxc &> /dev/null; then
-    echo -e "${YELLOW}LXC not found.  Installing...${NC}"
+    echo -e "${YELLOW}LXC not found. Installing...${NC}"
     sudo apt update
     sudo apt install -y lxd lxd-client
     sudo lxd init --auto
@@ -44,7 +44,7 @@ fi
 
 # Create container if it doesn't exist
 if ! lxc info "$CONTAINER_NAME" &> /dev/null; then
-    echo -e "${GREEN}Creating LXC container:  $CONTAINER_NAME${NC}"
+    echo -e "${GREEN}Creating LXC container: $CONTAINER_NAME${NC}"
     lxc launch ubuntu:22.04 "$CONTAINER_NAME"
     sleep 10
 fi
@@ -75,7 +75,7 @@ echo "Installing Python dependencies..."
 lxc exec "$CONTAINER_NAME" -- pip3 install -r "$INSTALL_DIR/requirements.txt"
 
 # Install systemd service
-if [ -f "systemd/opcua-server. service" ]; then
+if [ -f "systemd/opcua-server.service" ]; then
     echo "Installing systemd service..."
     lxc file push systemd/opcua-server.service "$CONTAINER_NAME/etc/systemd/system/"
     lxc exec "$CONTAINER_NAME" -- systemctl daemon-reload
@@ -86,7 +86,7 @@ fi
 # Configure port forwarding
 echo "Configuring port forwarding..."
 lxc config device add "$CONTAINER_NAME" opcua-port proxy \
-    listen=tcp: 0.0.0.0:4840 \
+    listen=tcp:0.0.0.0:4840 \
     connect=tcp:127.0.0.1:4840 || echo "Port already configured"
 
 # Get container IP

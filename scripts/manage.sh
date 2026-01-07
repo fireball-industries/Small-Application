@@ -109,7 +109,7 @@ try:
     print("✓ Test completed successfully!")
     sys.exit(0)
 except Exception as e:
-    print(f"✗ Error:  {e}")
+    print(f"✗ Error: {e}")
     sys.exit(1)
 PYEOF
         ;;
