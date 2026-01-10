@@ -94,6 +94,9 @@ except ImportError:
 
 import sqlite3
 import threading
+import re
+import math
+from typing import Callable
 
 
 class DataPublisher(ABC):
@@ -3028,6 +3031,283 @@ class SQLitePersistencePublisher(DataPublisher):
             return {}
 
 
+class DataTransformationPublisher(DataPublisher):
+    """
+    Data Transformation Publisher - Apply transformations, unit conversions, and computed tags.
+    
+    Features:
+    - Unit conversions (temperature, pressure, flow, etc.)
+    - Scaling and offset calculations
+    - Expression-based computed tags
+    - Tag aliasing
+    - Safe expression evaluation
+    """
+    
+    # Unit conversion definitions
+    UNIT_CONVERSIONS = {
+        # Temperature
+        'celsius_to_fahrenheit': lambda c: c * 9/5 + 32,
+        'fahrenheit_to_celsius': lambda f: (f - 32) * 5/9,
+        'celsius_to_kelvin': lambda c: c + 273.15,
+        'kelvin_to_celsius': lambda k: k - 273.15,
+        'fahrenheit_to_kelvin': lambda f: (f - 32) * 5/9 + 273.15,
+        'kelvin_to_fahrenheit': lambda k: (k - 273.15) * 9/5 + 32,
+        
+        # Pressure
+        'kpa_to_psi': lambda kpa: kpa * 0.145038,
+        'psi_to_kpa': lambda psi: psi / 0.145038,
+        'bar_to_psi': lambda bar: bar * 14.5038,
+        'psi_to_bar': lambda psi: psi / 14.5038,
+        'kpa_to_bar': lambda kpa: kpa / 100,
+        'bar_to_kpa': lambda bar: bar * 100,
+        
+        # Flow
+        'lpm_to_gpm': lambda lpm: lpm * 0.264172,  # L/min to gal/min
+        'gpm_to_lpm': lambda gpm: gpm / 0.264172,
+        'lps_to_gps': lambda lps: lps * 0.264172,  # L/s to gal/s
+        'gps_to_lps': lambda gps: gps / 0.264172,
+        
+        # Length
+        'mm_to_inch': lambda mm: mm / 25.4,
+        'inch_to_mm': lambda inch: inch * 25.4,
+        'cm_to_inch': lambda cm: cm / 2.54,
+        'inch_to_cm': lambda inch: inch * 2.54,
+        'm_to_ft': lambda m: m * 3.28084,
+        'ft_to_m': lambda ft: ft / 3.28084,
+        
+        # Mass
+        'kg_to_lb': lambda kg: kg * 2.20462,
+        'lb_to_kg': lambda lb: lb / 2.20462,
+        'g_to_oz': lambda g: g * 0.035274,
+        'oz_to_g': lambda oz: oz / 0.035274,
+        
+        # Volume
+        'l_to_gal': lambda l: l * 0.264172,
+        'gal_to_l': lambda gal: gal / 0.264172,
+        'ml_to_floz': lambda ml: ml * 0.033814,
+        'floz_to_ml': lambda floz: floz / 0.033814,
+        
+        # Speed
+        'mps_to_fps': lambda mps: mps * 3.28084,  # m/s to ft/s
+        'fps_to_mps': lambda fps: fps / 3.28084,
+        'kph_to_mph': lambda kph: kph * 0.621371,
+        'mph_to_kph': lambda mph: mph / 0.621371,
+    }
+    
+    def __init__(self, config: Dict[str, Any], logger: Optional[logging.Logger] = None):
+        """Initialize data transformation publisher."""
+        super().__init__(config, logger)
+        
+        self.transformations = self.config.get("transformations", [])
+        self.computed_tags = self.config.get("computed_tags", [])
+        self.enable_conversions = self.config.get("enable_conversions", True)
+        self.enable_computed = self.config.get("enable_computed", True)
+        
+        self.source_tags = {}  # Store source tag values
+        self.transformed_cache = {}  # Cache transformed values
+        self.write_callback = None  # Callback to write transformed tags back
+        
+        # Safe math functions for expressions
+        self.safe_functions = {
+            'abs': abs,
+            'round': round,
+            'min': min,
+            'max': max,
+            'sum': sum,
+            'pow': pow,
+            'sqrt': math.sqrt,
+            'sin': math.sin,
+            'cos': math.cos,
+            'tan': math.tan,
+            'log': math.log,
+            'log10': math.log10,
+            'exp': math.exp,
+            'floor': math.floor,
+            'ceil': math.ceil,
+        }
+        
+    def start(self):
+        """Start the transformation publisher."""
+        try:
+            self.enabled = True
+            self.logger.info(f"Data transformation started ({len(self.transformations)} transformations, "
+                           f"{len(self.computed_tags)} computed tags)")
+        except Exception as e:
+            self.logger.error(f"Failed to start data transformation: {e}")
+            self.enabled = False
+    
+    def stop(self):
+        """Stop the transformation publisher."""
+        self.enabled = False
+        self.logger.info("Data transformation stopped")
+    
+    def publish(self, tag_name: str, value: Any, timestamp: Optional[float] = None):
+        """
+        Store source tag value and trigger transformations.
+        
+        Args:
+            tag_name: Name of the source tag
+            value: Tag value
+            timestamp: Optional timestamp
+        """
+        if not self.enabled:
+            return
+        
+        try:
+            # Store source value
+            self.source_tags[tag_name] = {
+                'value': value,
+                'timestamp': timestamp or time.time()
+            }
+            
+            # Apply transformations for this source tag
+            if self.enable_conversions:
+                self._apply_transformations(tag_name, value, timestamp)
+            
+            # Update computed tags that depend on this source
+            if self.enable_computed:
+                self._update_computed_tags(tag_name)
+            
+        except Exception as e:
+            self.logger.error(f"Error in transformation publish: {e}")
+    
+    def _apply_transformations(self, tag_name: str, value: Any, timestamp: Optional[float] = None):
+        """Apply configured transformations to a tag."""
+        for transform in self.transformations:
+            try:
+                # Check if this transformation applies to this tag
+                if transform.get('source_tag') != tag_name:
+                    continue
+                
+                transform_type = transform.get('type')
+                target_tag = transform.get('target_tag')
+                
+                if transform_type == 'unit_conversion':
+                    # Apply unit conversion
+                    conversion = transform.get('conversion')
+                    if conversion in self.UNIT_CONVERSIONS:
+                        converted_value = self.UNIT_CONVERSIONS[conversion](value)
+                        self._write_transformed_tag(target_tag, converted_value, timestamp)
+                    else:
+                        self.logger.warning(f"Unknown conversion: {conversion}")
+                
+                elif transform_type == 'scale_offset':
+                    # Apply scaling and offset: output = (input * scale) + offset
+                    scale = transform.get('scale', 1.0)
+                    offset = transform.get('offset', 0.0)
+                    transformed_value = (value * scale) + offset
+                    self._write_transformed_tag(target_tag, transformed_value, timestamp)
+                
+                elif transform_type == 'alias':
+                    # Simple alias/copy
+                    self._write_transformed_tag(target_tag, value, timestamp)
+                
+                elif transform_type == 'custom':
+                    # Custom transformation function
+                    expression = transform.get('expression')
+                    if expression:
+                        result = self._evaluate_expression(expression, {'value': value})
+                        self._write_transformed_tag(target_tag, result, timestamp)
+                
+            except Exception as e:
+                self.logger.error(f"Error applying transformation {transform.get('target_tag')}: {e}")
+    
+    def _update_computed_tags(self, changed_tag: str):
+        """Update computed tags that depend on the changed source tag."""
+        for computed in self.computed_tags:
+            try:
+                # Check if this computed tag depends on the changed tag
+                dependencies = computed.get('dependencies', [])
+                if changed_tag not in dependencies:
+                    continue
+                
+                # Check if all dependencies are available
+                if not all(dep in self.source_tags for dep in dependencies):
+                    continue
+                
+                # Build context with all source values
+                context = {
+                    dep: self.source_tags[dep]['value']
+                    for dep in dependencies
+                }
+                
+                # Evaluate expression
+                expression = computed.get('expression')
+                target_tag = computed.get('target_tag')
+                
+                if expression and target_tag:
+                    result = self._evaluate_expression(expression, context)
+                    timestamp = max(self.source_tags[dep]['timestamp'] for dep in dependencies)
+                    self._write_transformed_tag(target_tag, result, timestamp)
+                
+            except Exception as e:
+                self.logger.error(f"Error updating computed tag {computed.get('target_tag')}: {e}")
+    
+    def _evaluate_expression(self, expression: str, context: Dict[str, Any]) -> Any:
+        """
+        Safely evaluate a mathematical expression.
+        
+        Args:
+            expression: Expression to evaluate
+            context: Variables available in the expression
+            
+        Returns:
+            Evaluated result
+        """
+        try:
+            # Create safe evaluation context
+            safe_dict = {
+                '__builtins__': {},
+                **self.safe_functions,
+                **context
+            }
+            
+            # Evaluate expression
+            result = eval(expression, safe_dict)
+            return result
+            
+        except Exception as e:
+            self.logger.error(f"Error evaluating expression '{expression}': {e}")
+            raise
+    
+    def _write_transformed_tag(self, tag_name: str, value: Any, timestamp: Optional[float] = None):
+        """Write a transformed tag value."""
+        # Cache the value
+        self.transformed_cache[tag_name] = {
+            'value': value,
+            'timestamp': timestamp or time.time()
+        }
+        
+        # Call write callback if set (to write back to OPC UA server)
+        if self.write_callback:
+            try:
+                self.write_callback(tag_name, value)
+            except Exception as e:
+                self.logger.error(f"Error writing transformed tag {tag_name}: {e}")
+    
+    def set_write_callback(self, callback: Callable):
+        """Set callback function for writing transformed tags."""
+        self.write_callback = callback
+    
+    def get_transformed_tags(self) -> Dict[str, Any]:
+        """Get all transformed tag values."""
+        return self.transformed_cache
+    
+    def add_transformation(self, transformation: Dict[str, Any]):
+        """Add a transformation at runtime."""
+        self.transformations.append(transformation)
+        self.logger.info(f"Added transformation: {transformation.get('target_tag')}")
+    
+    def add_computed_tag(self, computed_tag: Dict[str, Any]):
+        """Add a computed tag at runtime."""
+        self.computed_tags.append(computed_tag)
+        self.logger.info(f"Added computed tag: {computed_tag.get('target_tag')}")
+    
+    def get_available_conversions(self) -> List[str]:
+        """Get list of available unit conversions."""
+        return sorted(list(self.UNIT_CONVERSIONS.keys()))
+
+
 class PublisherManager:
     """Manages multiple data publishers."""
     
@@ -3138,6 +3418,13 @@ class PublisherManager:
             sqlite_pub = SQLitePersistencePublisher(sqlite_config, self.logger)
             self.publishers.append(sqlite_pub)
             self.logger.info("SQLite Persistence publisher initialized")
+        
+        # Data Transformation Publisher
+        transformation_config = publishers_config.get("data_transformation", {})
+        if transformation_config.get("enabled", False):
+            transformation_pub = DataTransformationPublisher(transformation_config, self.logger)
+            self.publishers.append(transformation_pub)
+            self.logger.info("Data Transformation publisher initialized")
         
         return self.publishers
     
