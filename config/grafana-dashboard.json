@@ -1,0 +1,146 @@
+{
+  "dashboard": {
+    "title": "OPC UA Industrial Monitoring",
+    "tags": ["opcua", "industrial", "fireball"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "type": "timeseries",
+        "title": "Temperature Trend",
+        "targets": [
+          {
+            "refId": "A",
+            "query": "from(bucket: \"industrial-data\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"opcua_tags\")\n  |> filter(fn: (r) => r.tag == \"Temperature\")\n  |> filter(fn: (r) => r._field == \"value\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "type": "timeseries",
+        "title": "Pressure Trend",
+        "targets": [
+          {
+            "refId": "A",
+            "query": "from(bucket: \"industrial-data\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"opcua_tags\")\n  |> filter(fn: (r) => r.tag == \"Pressure\")\n  |> filter(fn: (r) => r._field == \"value\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 8},
+        "type": "stat",
+        "title": "Current Temperature",
+        "targets": [
+          {
+            "refId": "A",
+            "query": "from(bucket: \"industrial-data\")\n  |> range(start: -5m)\n  |> filter(fn: (r) => r._measurement == \"opcua_tags\")\n  |> filter(fn: (r) => r.tag == \"Temperature\")\n  |> filter(fn: (r) => r._field == \"value\")\n  |> last()"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "celsius",
+            "thresholds": {
+              "steps": [
+                {"value": 0, "color": "blue"},
+                {"value": 20, "color": "green"},
+                {"value": 24, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 4,
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 8},
+        "type": "stat",
+        "title": "Current Pressure",
+        "targets": [
+          {
+            "refId": "A",
+            "query": "from(bucket: \"industrial-data\")\n  |> range(start: -5m)\n  |> filter(fn: (r) => r._measurement == \"opcua_tags\")\n  |> filter(fn: (r) => r.tag == \"Pressure\")\n  |> filter(fn: (r) => r._field == \"value\")\n  |> last()"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "pressurekpa",
+            "thresholds": {
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 99, "color": "green"},
+                {"value": 103, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 5,
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 8},
+        "type": "gauge",
+        "title": "Flow Rate",
+        "targets": [
+          {
+            "refId": "A",
+            "query": "from(bucket: \"industrial-data\")\n  |> range(start: -5m)\n  |> filter(fn: (r) => r._measurement == \"opcua_tags\")\n  |> filter(fn: (r) => r.tag == \"FlowRate\")\n  |> filter(fn: (r) => r._field == \"value\")\n  |> last()"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "min": 0,
+            "max": 150,
+            "thresholds": {
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 80, "color": "yellow"},
+                {"value": 90, "color": "green"},
+                {"value": 130, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 6,
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 8},
+        "type": "stat",
+        "title": "Production Counter",
+        "targets": [
+          {
+            "refId": "A",
+            "query": "from(bucket: \"industrial-data\")\n  |> range(start: -5m)\n  |> filter(fn: (r) => r._measurement == \"opcua_tags\")\n  |> filter(fn: (r) => r.tag == \"Counter\")\n  |> filter(fn: (r) => r._field == \"value_int\")\n  |> last()"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "steps": [
+                {"value": 0, "color": "blue"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 7,
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 12},
+        "type": "table",
+        "title": "All Tags - Current Values",
+        "targets": [
+          {
+            "refId": "A",
+            "query": "from(bucket: \"industrial-data\")\n  |> range(start: -5m)\n  |> filter(fn: (r) => r._measurement == \"opcua_tags\")\n  |> filter(fn: (r) => r._field == \"value\")\n  |> last()\n  |> pivot(rowKey:[\"_time\"], columnKey: [\"tag\"], valueColumn: \"_value\")"
+          }
+        ]
+      }
+    ],
+    "refresh": "5s",
+    "time": {"from": "now-1h", "to": "now"},
+    "timepicker": {
+      "refresh_intervals": ["5s", "10s", "30s", "1m", "5m"]
+    }
+  }
+}

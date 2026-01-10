@@ -64,6 +64,13 @@ try:
 except ImportError:
     GRAPHQL_AVAILABLE = False
 
+try:
+    from influxdb_client import InfluxDBClient, Point, WritePrecision
+    from influxdb_client.client.write_api import SYNCHRONOUS
+    INFLUXDB_AVAILABLE = True
+except ImportError:
+    INFLUXDB_AVAILABLE = False
+
 
 class DataPublisher(ABC):
     """Base class for all data publishers."""
@@ -1097,6 +1104,168 @@ class ModbusTCPPublisher(DataPublisher):
         return self.tag_register_map.copy()
 
 
+class InfluxDBPublisher(DataPublisher):
+    """
+    InfluxDB Publisher - Time-series database storage
+    
+    Writes tag data to InfluxDB for:
+    - Historical data storage
+    - Trend analysis
+    - Grafana dashboards
+    - Long-term data retention
+    - Analytics and reporting
+    
+    Because sometimes you need to know what happened last Tuesday at 3:47 PM.
+    And because "if it's not in the database, it didn't happen."
+    """
+    
+    def __init__(self, config: Dict[str, Any], logger: Optional[logging.Logger] = None):
+        """
+        Initialize the InfluxDB publisher.
+        
+        Config structure:
+        {
+            "enabled": true,
+            "url": "http://localhost:8086",
+            "token": "your-influx-token",
+            "org": "fireball-industries",
+            "bucket": "industrial-data",
+            "measurement": "opcua_tags",
+            "batch_size": 100,
+            "flush_interval": 1000  // milliseconds
+        }
+        """
+        super().__init__(config, logger)
+        
+        if not INFLUXDB_AVAILABLE:
+            self.logger.warning("InfluxDB client library not available. Install with: pip install influxdb-client")
+            self.enabled = False
+            return
+        
+        self.url = config.get("url", "http://localhost:8086")
+        self.token = config.get("token", "")
+        self.org = config.get("org", "fireball-industries")
+        self.bucket = config.get("bucket", "industrial-data")
+        self.measurement = config.get("measurement", "opcua_tags")
+        self.batch_size = config.get("batch_size", 100)
+        self.flush_interval = config.get("flush_interval", 1000)
+        
+        self.client = None
+        self.write_api = None
+        
+        # Additional tags to add to each point
+        self.global_tags = config.get("tags", {})
+        
+    def start(self):
+        """Start the InfluxDB publisher."""
+        if not self.enabled or not INFLUXDB_AVAILABLE:
+            if not INFLUXDB_AVAILABLE:
+                self.logger.warning("InfluxDB publisher is disabled (library not available)")
+            else:
+                self.logger.info("InfluxDB publisher is disabled")
+            return
+        
+        try:
+            # Create InfluxDB client
+            self.client = InfluxDBClient(
+                url=self.url,
+                token=self.token,
+                org=self.org
+            )
+            
+            # Create write API with batching
+            self.write_api = self.client.write_api(
+                write_options=SYNCHRONOUS
+            )
+            
+            # Test connection by pinging
+            health = self.client.health()
+            if health.status == "pass":
+                self.logger.info(f"InfluxDB publisher started: {self.url} -> {self.bucket}")
+                self.running = True
+            else:
+                self.logger.error(f"InfluxDB health check failed: {health.message}")
+                self.enabled = False
+                
+        except Exception as e:
+            self.logger.error(f"Failed to start InfluxDB publisher: {e}")
+            self.enabled = False
+    
+    def stop(self):
+        """Stop the InfluxDB publisher."""
+        if self.write_api:
+            try:
+                self.write_api.close()
+                self.logger.debug("InfluxDB write API closed")
+            except Exception as e:
+                self.logger.error(f"Error closing InfluxDB write API: {e}")
+        
+        if self.client:
+            try:
+                self.client.close()
+                self.logger.info("InfluxDB publisher stopped")
+            except Exception as e:
+                self.logger.error(f"Error closing InfluxDB client: {e}")
+        
+        self.running = False
+    
+    def publish(self, tag_name: str, value: Any, timestamp: Optional[float] = None):
+        """
+        Write tag value to InfluxDB.
+        
+        Args:
+            tag_name: Name of the tag
+            value: Tag value
+            timestamp: Optional timestamp (uses current time if not provided)
+        """
+        if not self.enabled or not self.running or not INFLUXDB_AVAILABLE:
+            return
+        
+        try:
+            # Create point
+            point = Point(self.measurement)
+            
+            # Add tag name as a tag (for efficient querying)
+            point.tag("tag", tag_name)
+            
+            # Add global tags
+            for tag_key, tag_value in self.global_tags.items():
+                point.tag(tag_key, tag_value)
+            
+            # Add value as field (type-specific)
+            if isinstance(value, bool):
+                point.field("value_bool", value)
+                point.field("value", 1 if value else 0)  # Numeric representation
+            elif isinstance(value, int):
+                point.field("value_int", value)
+                point.field("value", float(value))
+            elif isinstance(value, float):
+                point.field("value_float", value)
+                point.field("value", value)
+            elif isinstance(value, str):
+                point.field("value_string", value)
+                # Try to parse as number for graphing
+                try:
+                    point.field("value", float(value))
+                except (ValueError, TypeError):
+                    pass
+            else:
+                point.field("value_string", str(value))
+            
+            # Set timestamp
+            if timestamp:
+                # Convert to nanoseconds (InfluxDB native precision)
+                point.time(int(timestamp * 1e9), WritePrecision.NS)
+            
+            # Write to InfluxDB
+            self.write_api.write(bucket=self.bucket, org=self.org, record=point)
+            
+            self.logger.debug(f"Wrote to InfluxDB: {tag_name} = {value}")
+            
+        except Exception as e:
+            self.logger.error(f"Error writing to InfluxDB: {e}")
+
+
 class GraphQLPublisher(DataPublisher):
     """
     GraphQL API Publisher - Modern query interface
@@ -1626,6 +1795,13 @@ class PublisherManager:
             graphql_pub = GraphQLPublisher(graphql_config, self.logger)
             self.publishers.append(graphql_pub)
             self.logger.info("GraphQL API publisher initialized")
+        
+        # InfluxDB Publisher
+        influxdb_config = publishers_config.get("influxdb", {})
+        if influxdb_config.get("enabled", False):
+            influxdb_pub = InfluxDBPublisher(influxdb_config, self.logger)
+            self.publishers.append(influxdb_pub)
+            self.logger.info("InfluxDB publisher initialized")
         
         # OPC UA Client Publisher
         opcua_client_config = publishers_config.get("opcua_client", {})

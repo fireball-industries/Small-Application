@@ -39,8 +39,9 @@ Great for development, testing, demos, or just pretending you have a fully instr
 - **🆕 REST API**: Query and write tags via HTTP endpoints - The protocol even your PM understands
 - **🆕 GraphQL API**: Modern query interface - REST's cooler younger sibling
 - **🆕 MODBUS TCP**: Legacy PLC and SCADA support - Respect your elders (even if they're from 1979)
+- **🆕 InfluxDB**: Time-series database storage + Grafana dashboards - Historical data that doesn't lie
 - **🆕 OPC UA Client**: Push data to other OPC UA servers (Ignition, historians) - Bidirectional baby!
-- **🆕 Multi-Protocol**: Run 10 protocols simultaneously - Because we have issues
+- **🆕 Multi-Protocol**: Run 11 protocols simultaneously - Because we have issues
 
 ## Quick Start
 
@@ -371,6 +372,24 @@ Found a bug? Have an idea? PRs welcome. Please include:
 - Tests if applicable (we believe in you)
 - Your favorite industrial automation horror story
 - Have an idea? Let me know!
+
+## Documentation
+
+**Core Guides:**
+- [Configuration Guide](docs/CONFIGURATION.md) - Complete tag and publisher configuration
+- [Architecture Overview](docs/ARCHITECTURE_OVERVIEW.md) - System architecture and data flow
+- [Multi-Protocol Summary](docs/MULTI_PROTOCOL_SUMMARY.md) - All 11 protocols explained
+- [Protocol Comparison Guide](docs/PROTOCOL_GUIDE.md) - Which protocol for which job?
+
+**Integration Guides:**
+- [Ignition Edge Integration](docs/IGNITION_INTEGRATION.md) - Sparkplug B + OPC UA Client setup
+- [Node-RED Integration](docs/NODERED_INTEGRATION.md) - Flow-based programming
+- [MODBUS Integration](docs/MODBUS_INTEGRATION.md) - Legacy PLC integration
+- [OPC UA Client Mode](docs/OPCUA_CLIENT_CONFIGURATION.md) - Push to other OPC UA servers
+- [GraphQL Integration](docs/GRAPHQL_INTEGRATION.md) - Modern query interface
+- [InfluxDB + Grafana](docs/INFLUXDB_GRAFANA_INTEGRATION.md) - Time-series storage and visualization
+
+All docs written in Patrick Ryan's signature style - snarky but helpful.
 
 ## License
 

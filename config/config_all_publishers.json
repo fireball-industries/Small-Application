@@ -145,6 +145,21 @@
       "graphiql": true,
       "cors_enabled": true,
       "description": "GraphQL API for modern query interface"
+    },
+    "influxdb": {
+      "enabled": false,
+      "url": "http://localhost:8086",
+      "token": "your-influx-token",
+      "org": "fireball-industries",
+      "bucket": "industrial-data",
+      "measurement": "opcua_tags",
+      "batch_size": 100,
+      "flush_interval": 1000,
+      "tags": {
+        "source": "opcua_server",
+        "location": "factory_floor"
+      },
+      "description": "InfluxDB time-series database for historical data"
     }
   }
 }

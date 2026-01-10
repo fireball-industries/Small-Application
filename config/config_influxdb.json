@@ -1,0 +1,18 @@
+{
+  "publishers": {
+    "influxdb": {
+      "enabled": true,
+      "url": "http://localhost:8086",
+      "token": "your-influx-token-here",
+      "org": "fireball-industries",
+      "bucket": "industrial-data",
+      "measurement": "opcua_tags",
+      "batch_size": 100,
+      "flush_interval": 1000,
+      "tags": {
+        "source": "opcua_server",
+        "location": "factory_floor"
+      }
+    }
+  }
+}

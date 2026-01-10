@@ -76,6 +76,7 @@ Is it overkill? Absolutely. Will it save your bacon when some legacy PLC from 19
 | 8 | REST API | Server | 5001 | ← Inbound | HTTP GET/POST | "The API everyone understands" |
 | 9 | MODBUS TCP | Server | 502 | ← Inbound | Legacy PLCs poll | "Talking to grandpa's PLC" |
 | 10 | GraphQL | Server | 5002 | ← Inbound | Modern query interface | "REST but you pick the fields" |
+| 11 | InfluxDB | Client | N/A | → Outbound | Time-series database | "Remembering everything forever" |
 
 ---
 
@@ -125,6 +126,11 @@ Tag Update: Temperature = 25.5°C
     └─► Stores in memory
         └─► Responds to GraphQL queries
             └─► GraphiQL IDE available
+│
+└─► InfluxDB Publisher
+    └─► Writes to time-series database
+        └─► Grafana visualizes data
+            └─► Historical analysis available
 │       └─► GET /api/tags/Temperature returns value
 │
 └─► MODBUS TCP Server (Port 502)
