@@ -256,6 +256,51 @@ Look, I get it. You're probably thinking "Why do we need 9 different protocols?"
 
 ---
 
+### 9. GraphQL API
+**Status:** ✅ Fully Implemented
+
+**What it is:** Modern query language for APIs (like REST but you're in control)
+
+**Use Cases:**
+- Modern web applications (React, Vue, Angular)
+- Mobile apps
+- Data analytics dashboards
+- Flexible tag querying
+
+**Why GraphQL:**
+- Request exactly the data you need
+- Strong typing and schema introspection
+- Single endpoint for all queries
+- Built-in GraphiQL IDE
+
+**Configuration:**
+```json
+{
+  "graphql": {
+    "enabled": true,
+    "host": "0.0.0.0",
+    "port": 5002,
+    "graphiql": true,
+    "cors_enabled": true
+  }
+}
+```
+
+**Example Query:**
+```graphql
+{
+  tags(filter: "Temperature") {
+    name
+    value
+    timestamp
+  }
+}
+```
+
+**Best For:** Modern web apps, mobile apps, analytics platforms
+
+---
+
 ## Feasible to Add 🟡
 
 ### 1. OPC UA (Original)
