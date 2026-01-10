@@ -50,6 +50,13 @@ try:
 except ImportError:
     MODBUS_AVAILABLE = False
 
+try:
+    from opcua import Client as OPCUAClient
+    from opcua import ua
+    OPCUA_CLIENT_AVAILABLE = True
+except ImportError:
+    OPCUA_CLIENT_AVAILABLE = False
+
 
 class DataPublisher(ABC):
     """Base class for all data publishers."""
