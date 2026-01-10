@@ -380,8 +380,9 @@ Found a bug? Have an idea? PRs welcome. Please include:
 **Core Guides:**
 - [Configuration Guide](docs/CONFIGURATION.md) - Complete tag and publisher configuration
 - [Architecture Overview](docs/ARCHITECTURE_OVERVIEW.md) - System architecture and data flow
-- [Multi-Protocol Summary](docs/MULTI_PROTOCOL_SUMMARY.md) - All 11 protocols explained
+- [Multi-Protocol Summary](docs/MULTI_PROTOCOL_SUMMARY.md) - All 12 protocols explained
 - [Protocol Comparison Guide](docs/PROTOCOL_GUIDE.md) - Which protocol for which job?
+- **[🔥 EmberBurn Web UI](docs/WEB_UI.md) - Beautiful web-based configuration dashboard** ⭐ NEW!
 
 **Integration Guides:**
 - [Ignition Edge Integration](docs/IGNITION_INTEGRATION.md) - Sparkplug B + OPC UA Client setup
@@ -393,6 +394,28 @@ Found a bug? Have an idea? PRs welcome. Please include:
 - [Alarms & Notifications](docs/ALARMS_NOTIFICATIONS.md) - Alerting via email/Slack/SMS
 
 All docs written in Patrick Ryan's signature style - snarky but helpful.
+
+## Quick Start with Web UI 🔥
+
+Want the easiest experience? Use the EmberBurn Web UI:
+
+1. **Start the server with REST API enabled:**
+   ```bash
+   python opcua_server.py -c config/config_all_publishers.json
+   ```
+
+2. **Open your browser:**
+   ```
+   http://localhost:5000/
+   ```
+
+3. **Enjoy the dashboard!**
+   - Real-time tag monitoring
+   - Enable/disable publishers with one click
+   - View active alarms
+   - No JSON editing required!
+
+See [docs/WEB_UI.md](docs/WEB_UI.md) for the full guide.
 
 ## License
 
