@@ -75,6 +75,7 @@ Is it overkill? Absolutely. Will it save your bacon when some legacy PLC from 19
 | 7 | WebSocket | Server | 9001 | ← Inbound | Real-time browsers | "Live streaming my data" |
 | 8 | REST API | Server | 5001 | ← Inbound | HTTP GET/POST | "The API everyone understands" |
 | 9 | MODBUS TCP | Server | 502 | ← Inbound | Legacy PLCs poll | "Talking to grandpa's PLC" |
+| 10 | GraphQL | Server | 5002 | ← Inbound | Modern query interface | "REST but you pick the fields" |
 
 ---
 
@@ -118,6 +119,12 @@ Tag Update: Temperature = 25.5°C
 │
 ├─► REST API (Port 5001)
 │   └─► Stores in memory
+│       └─► Responds to HTTP requests
+│
+└─► GraphQL API (Port 5002)
+    └─► Stores in memory
+        └─► Responds to GraphQL queries
+            └─► GraphiQL IDE available
 │       └─► GET /api/tags/Temperature returns value
 │
 └─► MODBUS TCP Server (Port 502)
