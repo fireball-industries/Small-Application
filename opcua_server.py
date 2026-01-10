@@ -40,6 +40,7 @@ class OPCUAServer:
         self.config_file = config_file
         self.running = True
         self.tags = {}
+        self.tag_metadata = {}  # Store tag metadata
         self.update_interval = float(os.getenv('UPDATE_INTERVAL', '2'))
         self.publisher_manager = None
         self.full_config = None
@@ -222,6 +223,19 @@ class OPCUAServer:
                     "type": tag_type
                 }
                 
+                # Store tag metadata for publishers
+                self.tag_metadata[tag_name] = {
+                    "type": tag_type,
+                    "description": tag_info.get("description", ""),
+                    "units": tag_info.get("units", ""),
+                    "min": tag_info.get("min"),
+                    "max": tag_info.get("max"),
+                    "category": tag_info.get("category", "general"),
+                    "quality": tag_info.get("quality", "good"),
+                    "writable": tag_info.get("writable", False),
+                    "simulation_type": tag_info.get("simulation_type")
+                }
+                
                 self.logger.debug(f"Created tag: {tag_name} ({tag_type}) = {initial_value}")
                 
             except Exception as e:
@@ -382,6 +396,10 @@ class OPCUAServer:
             if self.full_config:
                 self.publisher_manager = PublisherManager(self.full_config, self.logger)
                 self.publisher_manager.initialize_publishers()
+                
+                # Pass tag metadata to publishers that need it
+                self._setup_tag_metadata()
+                
                 self.publisher_manager.start_all()
             
             self.print_server_info()
@@ -399,6 +417,18 @@ class OPCUAServer:
     def shutdown(self):
         """Gracefully shutdown the server."""
         self.logger.info("Shutting down server...")
+    
+    def _setup_tag_metadata(self):
+        """Setup tag metadata for publishers that need it."""
+        if not self.publisher_manager:
+            return
+        
+        # Pass metadata to REST API publisher
+        for publisher in self.publisher_manager.publishers:
+            if hasattr(publisher, 'tag_cache'):
+                # This is likely the REST API or GraphQL publisher
+                publisher.tag_metadata = self.tag_metadata
+                self.logger.debug(f"Passed tag metadata to {publisher.__class__.__name__}")
         
         # Stop publishers first
         if self.publisher_manager:

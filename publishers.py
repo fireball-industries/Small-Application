@@ -328,6 +328,103 @@ class RESTAPIPublisher(DataPublisher):
                 return jsonify(self.tag_cache[tag_name])
             return jsonify({"error": "Tag not found"}), 404
         
+        @self.app.route('/api/tags/discovery', methods=['GET'])
+        def discover_tags():
+            """Discover all available tags with metadata."""
+            try:
+                # Get query parameters for filtering
+                filter_type = request.args.get('type')  # Filter by data type
+                search = request.args.get('search', '').lower()  # Search term
+                category = request.args.get('category')  # Filter by category
+                
+                tags = []
+                for tag_name, tag_data in self.tag_cache.items():
+                    # Get metadata from tag_metadata if available
+                    metadata = getattr(self, 'tag_metadata', {}).get(tag_name, {})
+                    
+                    # Build tag info
+                    tag_info = {
+                        'name': tag_name,
+                        'value': tag_data.get('value'),
+                        'timestamp': tag_data.get('timestamp'),
+                        'type': metadata.get('type', 'unknown'),
+                        'description': metadata.get('description', ''),
+                        'units': metadata.get('units', ''),
+                        'min': metadata.get('min'),
+                        'max': metadata.get('max'),
+                        'category': metadata.get('category', 'general'),
+                        'quality': metadata.get('quality', 'good'),
+                        'writable': metadata.get('writable', False),
+                        'simulation_type': metadata.get('simulation_type')
+                    }
+                    
+                    # Apply filters
+                    if filter_type and tag_info['type'] != filter_type:
+                        continue
+                    if search and search not in tag_name.lower() and search not in tag_info.get('description', '').lower():
+                        continue
+                    if category and tag_info['category'] != category:
+                        continue
+                    
+                    tags.append(tag_info)
+                
+                return jsonify({
+                    'tags': tags,
+                    'count': len(tags),
+                    'total_tags': len(self.tag_cache)
+                })
+            except Exception as e:
+                self.logger.error(f"Error in tag discovery: {e}")
+                return jsonify({"error": str(e)}), 500
+        
+        @self.app.route('/api/tags/<tag_name>/metadata', methods=['GET'])
+        def get_tag_metadata(tag_name):
+            """Get detailed metadata for a specific tag."""
+            if tag_name not in self.tag_cache:
+                return jsonify({"error": "Tag not found"}), 404
+            
+            metadata = getattr(self, 'tag_metadata', {}).get(tag_name, {})
+            tag_data = self.tag_cache[tag_name]
+            
+            return jsonify({
+                'name': tag_name,
+                'current_value': tag_data.get('value'),
+                'timestamp': tag_data.get('timestamp'),
+                'metadata': metadata
+            })
+        
+        @self.app.route('/api/tags/categories', methods=['GET'])
+        def get_tag_categories():
+            """Get all tag categories."""
+            categories = set()
+            metadata_dict = getattr(self, 'tag_metadata', {})
+            
+            for tag_name in self.tag_cache.keys():
+                metadata = metadata_dict.get(tag_name, {})
+                category = metadata.get('category', 'general')
+                categories.add(category)
+            
+            return jsonify({
+                'categories': sorted(list(categories)),
+                'count': len(categories)
+            })
+        
+        @self.app.route('/api/tags/types', methods=['GET'])
+        def get_tag_types():
+            """Get all data types used by tags."""
+            types = set()
+            metadata_dict = getattr(self, 'tag_metadata', {})
+            
+            for tag_name in self.tag_cache.keys():
+                metadata = metadata_dict.get(tag_name, {})
+                tag_type = metadata.get('type', 'unknown')
+                types.add(tag_type)
+            
+            return jsonify({
+                'types': sorted(list(types)),
+                'count': len(types)
+            })
+        
         @self.app.route('/api/tags/<tag_name>', methods=['POST', 'PUT'])
         def write_tag(tag_name):
             """Write a value to a tag."""
@@ -1817,6 +1914,14 @@ class GraphQLPublisher(DataPublisher):
             )
             type = graphene.String(description="Data type of the tag")
             timestamp = graphene.Float(description="Last update timestamp")
+            description = graphene.String(description="Tag description")
+            units = graphene.String(description="Engineering units")
+            min_value = graphene.Float(description="Minimum value")
+            max_value = graphene.Float(description="Maximum value")
+            category = graphene.String(description="Tag category")
+            quality = graphene.String(description="Tag quality (good, bad, uncertain)")
+            writable = graphene.Boolean(description="Whether tag is writable")
+            simulation_type = graphene.String(description="Simulation type if simulated")
             
             def resolve_value(self, info):
                 # Return value as string for generic handling
@@ -1853,11 +1958,20 @@ class GraphQLPublisher(DataPublisher):
                 """Resolve single tag query."""
                 if name in self.tags_data:
                     tag_data = self.tags_data[name]
+                    metadata = self.tag_metadata.get(name, {})
                     return TagType(
                         name=name,
                         value=tag_data.get('value'),
-                        type=tag_data.get('type', 'unknown'),
-                        timestamp=tag_data.get('timestamp')
+                        type=metadata.get('type', 'unknown'),
+                        timestamp=tag_data.get('timestamp'),
+                        description=metadata.get('description', ''),
+                        units=metadata.get('units', ''),
+                        min_value=metadata.get('min'),
+                        max_value=metadata.get('max'),
+                        category=metadata.get('category', 'general'),
+                        quality=metadata.get('quality', 'good'),
+                        writable=metadata.get('writable', False),
+                        simulation_type=metadata.get('simulation_type')
                     )
                 return None
             
@@ -1869,11 +1983,20 @@ class GraphQLPublisher(DataPublisher):
                     if filter and filter.lower() not in name.lower():
                         continue
                     
+                    metadata = self.tag_metadata.get(name, {})
                     tags.append(TagType(
                         name=name,
                         value=tag_data.get('value'),
-                        type=tag_data.get('type', 'unknown'),
-                        timestamp=tag_data.get('timestamp')
+                        type=metadata.get('type', 'unknown'),
+                        timestamp=tag_data.get('timestamp'),
+                        description=metadata.get('description', ''),
+                        units=metadata.get('units', ''),
+                        min_value=metadata.get('min'),
+                        max_value=metadata.get('max'),
+                        category=metadata.get('category', 'general'),
+                        quality=metadata.get('quality', 'good'),
+                        writable=metadata.get('writable', False),
+                        simulation_type=metadata.get('simulation_type')
                     ))
                 return tags
             
@@ -1884,8 +2007,9 @@ class GraphQLPublisher(DataPublisher):
                     tags=list(self.tags_data.keys())
                 )
         
-        # Bind tags_data to Query class for resolvers
+        # Bind tags_data and metadata to Query class for resolvers
         Query.tags_data = self.tags_data
+        Query.tag_metadata = getattr(self, 'tag_metadata', {})
         
         # Create schema
         self.schema = graphene.Schema(query=Query)
