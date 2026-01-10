@@ -383,3 +383,5 @@ Built with [python-opcua](https://github.com/FreeOpcUa/python-opcua) because rei
 ---
 
 *Made with ☕ and mild existential dread about industrial automation security*
+
+- Do I make a GUI for this beast next?
