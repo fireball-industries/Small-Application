@@ -20,18 +20,26 @@ Your OPC UA Server now supports **9 industrial data streaming protocols**:
 - `config/config_all_publishers.json` - All protocols enabled
 - `config/config_ignition.json` - Optimized for Ignition Edge
 - `config/config_nodered.json` - Optimized for Node-RED
+- `config/config_modbus.json` - MODBUS TCP configuration
+- `config/config_opcua_client.json` - OPC UA Client single server
+- `config/config_opcua_multi_server.json` - OPC UA Client multiple servers
 
 ### Documentation
 - `docs/IGNITION_INTEGRATION.md` - Complete Ignition Edge setup guide
 - `docs/NODERED_INTEGRATION.md` - Complete Node-RED setup guide
 - `docs/PROTOCOL_GUIDE.md` - All industrial protocols explained
+- `docs/MODBUS_INTEGRATION.md` - MODBUS TCP integration guide
+- `docs/OPCUA_CLIENT_INTEGRATION.md` - OPC UA Client complete guide
+- `docs/OPCUA_CLIENT_QUICKSTART.md` - OPC UA Client quick start
 
 ### Code
-- Updated `publishers.py` with 4 new publishers:
+- Updated `publishers.py` with 6 new publishers:
   - `SparkplugBPublisher` - For Ignition
   - `KafkaPublisher` - Enterprise streaming
   - `AMQPPublisher` - RabbitMQ
   - `WebSocketPublisher` - Real-time web
+  - `ModbusTCPPublisher` - Legacy PLCs
+  - `OPCUAClientPublisher` - Push to other OPC UA servers
 
 - Updated `requirements.txt`:
   - sparkplug-b==1.0.3
