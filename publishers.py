@@ -322,6 +322,33 @@ class RESTAPIPublisher(DataPublisher):
                 "status": "healthy",
                 "tags_count": len(self.tag_cache)
             })
+        
+        @self.app.route('/api/publishers', methods=['GET'])
+        def get_publishers():
+            """Get all publisher statuses."""
+            # This will be populated by the PublisherManager
+            return jsonify({
+                "publishers": getattr(self, '_publisher_statuses', [])
+            })
+        
+        @self.app.route('/api/publishers/<publisher_name>/toggle', methods=['POST'])
+        def toggle_publisher(publisher_name):
+            """Toggle a publisher on/off."""
+            # This will be handled by the PublisherManager
+            callback = getattr(self, '_toggle_callback', None)
+            if callback:
+                success = callback(publisher_name)
+                return jsonify({"success": success, "publisher": publisher_name})
+            return jsonify({"error": "Toggle not supported"}), 501
+        
+        @self.app.route('/api/alarms/active', methods=['GET'])
+        def get_active_alarms():
+            """Get active alarms."""
+            callback = getattr(self, '_alarms_callback', None)
+            if callback:
+                alarms = callback()
+                return jsonify({"alarms": alarms})
+            return jsonify({"alarms": []})
     
     def start(self):
         """Start the REST API server."""
@@ -2232,6 +2259,24 @@ class PublisherManager:
                 publisher.start()
             except Exception as e:
                 self.logger.error(f"Error starting publisher {publisher.__class__.__name__}: {e}")
+        
+        # Setup API callbacks for REST API publisher
+        for publisher in self.publishers:
+            if isinstance(publisher, RESTAPIPublisher):
+                # Set publisher statuses callback
+                publisher._publisher_statuses = self.get_publisher_statuses()
+                
+                # Set toggle callback
+                def toggle_callback(name):
+                    return self.toggle_publisher(name)
+                publisher._toggle_callback = toggle_callback
+                
+                # Set alarms callback
+                def alarms_callback():
+                    return self.get_active_alarms()
+                publisher._alarms_callback = alarms_callback
+                
+                break
     
     def stop_all(self):
         """Stop all publishers."""
@@ -2254,4 +2299,83 @@ class PublisherManager:
             try:
                 publisher.publish(tag_name, value, timestamp)
             except Exception as e:
-                self.logger.error(f"Error publishing to {publisher.__class__.__name__}: {e}")
+                self.logger.error(f"Error publishing to {publisher.__class__.__name__}: {e}")    
+    def get_publisher_statuses(self):
+        """Get status of all publishers."""
+        statuses = []
+        for publisher in self.publishers:
+            # Determine publisher name
+            class_name = publisher.__class__.__name__.replace('Publisher', '')
+            
+            # Map class names to friendly names
+            name_map = {
+                'MQTT': 'MQTT',
+                'REST API': 'REST API',
+                'SparkplugB': 'Sparkplug B',
+                'Kafka': 'Kafka',
+                'AMQP': 'AMQP',
+                'WebSocket': 'WebSocket',
+                'ModbusTCP': 'MODBUS TCP',
+                'GraphQL': 'GraphQL',
+                'InfluxDB': 'InfluxDB',
+                'Alarms': 'Alarms',
+                'OPCUAClient': 'OPC UA Client'
+            }
+            
+            friendly_name = name_map.get(class_name, class_name)
+            
+            statuses.append({
+                'name': friendly_name,
+                'enabled': publisher.enabled,
+                'class': publisher.__class__.__name__
+            })
+        
+        return statuses
+    
+    def toggle_publisher(self, publisher_name: str):
+        """Toggle a publisher on/off."""
+        for publisher in self.publishers:
+            class_name = publisher.__class__.__name__.replace('Publisher', '')
+            name_map = {
+                'MQTT': 'MQTT',
+                'REST API': 'REST API',
+                'SparkplugB': 'Sparkplug B',
+                'Kafka': 'Kafka',
+                'AMQP': 'AMQP',
+                'WebSocket': 'WebSocket',
+                'ModbusTCP': 'MODBUS TCP',
+                'GraphQL': 'GraphQL',
+                'InfluxDB': 'InfluxDB',
+                'Alarms': 'Alarms',
+                'OPCUAClient': 'OPC UA Client'
+            }
+            
+            friendly_name = name_map.get(class_name, class_name)
+            
+            if friendly_name == publisher_name:
+                publisher.enabled = not publisher.enabled
+                if publisher.enabled:
+                    try:
+                        publisher.start()
+                        self.logger.info(f"Publisher {publisher_name} enabled and started")
+                    except Exception as e:
+                        self.logger.error(f"Error starting publisher {publisher_name}: {e}")
+                        publisher.enabled = False
+                        return False
+                else:
+                    try:
+                        publisher.stop()
+                        self.logger.info(f"Publisher {publisher_name} disabled")
+                    except Exception as e:
+                        self.logger.error(f"Error stopping publisher {publisher_name}: {e}")
+                
+                return True
+        
+        return False
+    
+    def get_active_alarms(self):
+        """Get active alarms from the Alarms publisher."""
+        for publisher in self.publishers:
+            if isinstance(publisher, AlarmsPublisher):
+                return publisher.get_active_alarms()
+        return []
