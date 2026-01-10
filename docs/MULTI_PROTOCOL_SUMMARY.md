@@ -2,7 +2,7 @@
 
 ## What We Just Built 🎉
 
-Your OPC UA Server now supports **7 industrial data streaming protocols**:
+Your OPC UA Server now supports **8 industrial data streaming protocols**:
 
 1. ✅ **OPC UA** (original) - SCADA systems
 2. ✅ **MQTT** - IoT and cloud
@@ -11,6 +11,7 @@ Your OPC UA Server now supports **7 industrial data streaming protocols**:
 5. ✅ **AMQP (RabbitMQ)** - Enterprise messaging
 6. ✅ **WebSocket** - Real-time web UIs
 7. ✅ **REST API** - HTTP clients
+8. ✅ **MODBUS TCP** - Legacy PLCs and SCADA systems
 
 ## New Files Created
 
