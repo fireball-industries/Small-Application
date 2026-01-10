@@ -17,6 +17,30 @@ import paho.mqtt.client as mqtt
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
+try:
+    from sparkplug_b import *
+    SPARKPLUG_AVAILABLE = True
+except ImportError:
+    SPARKPLUG_AVAILABLE = False
+
+try:
+    from kafka import KafkaProducer
+    KAFKA_AVAILABLE = True
+except ImportError:
+    KAFKA_AVAILABLE = False
+
+try:
+    import pika
+    AMQP_AVAILABLE = True
+except ImportError:
+    AMQP_AVAILABLE = False
+
+try:
+    from websocket_server import WebsocketServer
+    WEBSOCKET_AVAILABLE = True
+except ImportError:
+    WEBSOCKET_AVAILABLE = False
+
 
 class DataPublisher(ABC):
     """Base class for all data publishers."""
