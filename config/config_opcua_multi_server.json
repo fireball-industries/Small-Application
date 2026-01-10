@@ -1,0 +1,69 @@
+{
+  "OPC_ENDPOINT": "opc.tcp://0.0.0.0:4840/freeopcua/server/",
+  "tags": [
+    {
+      "name": "Temperature",
+      "type": "float",
+      "initial_value": 25.5,
+      "min_value": -50.0,
+      "max_value": 150.0,
+      "change_rate": 0.5
+    },
+    {
+      "name": "Pressure",
+      "type": "float",
+      "initial_value": 101.3,
+      "min_value": 90.0,
+      "max_value": 120.0,
+      "change_rate": 0.3
+    }
+  ],
+  "publishers": {
+    "opcua_client": {
+      "enabled": true,
+      "servers": [
+        {
+          "url": "opc.tcp://ignition-server:4841",
+          "name": "Ignition Production",
+          "username": "admin",
+          "password": "password",
+          "namespace": 2,
+          "base_node": "ns=2;s=Gateway/",
+          "auto_create_nodes": true
+        },
+        {
+          "url": "opc.tcp://historian:4840",
+          "name": "Historian Server",
+          "username": "",
+          "password": "",
+          "namespace": 1,
+          "auto_create_nodes": false,
+          "node_mapping": {
+            "Temperature": "ns=1;s=Process/Temperature",
+            "Pressure": "ns=1;s=Process/Pressure"
+          }
+        },
+        {
+          "url": "opc.tcp://backup-server:4842",
+          "name": "Backup Server",
+          "namespace": 3,
+          "base_node": "ns=3;s=Backup/",
+          "auto_create_nodes": true
+        }
+      ],
+      "reconnect_interval": 10
+    },
+    "mqtt": {
+      "enabled": true,
+      "broker": "localhost",
+      "port": 1883,
+      "topic_prefix": "industrial/opcua",
+      "qos": 1
+    },
+    "rest_api": {
+      "enabled": true,
+      "host": "0.0.0.0",
+      "port": 5001
+    }
+  }
+}

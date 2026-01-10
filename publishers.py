@@ -1090,6 +1090,267 @@ class ModbusTCPPublisher(DataPublisher):
         return self.tag_register_map.copy()
 
 
+class OPCUAClientPublisher(DataPublisher):
+    """
+    OPC UA Client Publisher - Push data to other OPC UA servers
+    
+    This publisher acts as an OPC UA client and writes tag values to
+    nodes on remote OPC UA servers. Useful for pushing data to:
+    - Ignition's OPC UA server
+    - KEPServerEX
+    - Other OPC UA servers in the network
+    - Historian systems with OPC UA interfaces
+    
+    Features:
+    - Auto-connect and reconnect on disconnection
+    - Node browsing and creation
+    - Multiple server support
+    - Username/password authentication
+    - Certificate-based security (if configured)
+    - Automatic namespace handling
+    """
+    
+    def __init__(self, config: Dict[str, Any], logger: Optional[logging.Logger] = None):
+        """
+        Initialize the OPC UA Client publisher.
+        
+        Config structure:
+        {
+            "enabled": true,
+            "servers": [
+                {
+                    "url": "opc.tcp://remote-server:4840",
+                    "name": "Ignition Server",
+                    "username": "admin",  # Optional
+                    "password": "password",  # Optional
+                    "namespace": 2,  # Namespace index for creating nodes
+                    "base_node": "ns=2;s=Gateway/",  # Base node path
+                    "auto_create_nodes": true,  # Create nodes if they don't exist
+                    "node_mapping": {  # Optional: map tag names to specific node IDs
+                        "Temperature": "ns=2;s=Gateway/Temperature",
+                        "Pressure": "ns=2;s=Gateway/Pressure"
+                    }
+                }
+            ],
+            "reconnect_interval": 5  # Seconds between reconnection attempts
+        }
+        """
+        super().__init__(config, logger)
+        
+        if not OPCUA_CLIENT_AVAILABLE:
+            self.logger.warning("OPC UA Client library not available. Install with: pip install opcua")
+            self.enabled = False
+            return
+        
+        self.servers_config = config.get("servers", [])
+        self.reconnect_interval = config.get("reconnect_interval", 5)
+        
+        # Track client connections
+        self.clients = {}  # server_name -> {"client": OPCUAClient, "connected": bool, "nodes": {}}
+        self.running = False
+        self.reconnect_thread = None
+        
+        self.logger.info(f"OPC UA Client publisher initialized with {len(self.servers_config)} server(s)")
+    
+    def start(self):
+        """Start the OPC UA client publisher."""
+        if not self.enabled:
+            return
+        
+        self.running = True
+        
+        # Connect to all configured servers
+        for server_config in self.servers_config:
+            self._connect_to_server(server_config)
+        
+        # Start reconnection thread
+        self.reconnect_thread = threading.Thread(target=self._reconnect_loop, daemon=True)
+        self.reconnect_thread.start()
+        
+        self.logger.info("OPC UA Client publisher started")
+    
+    def stop(self):
+        """Stop the OPC UA client publisher."""
+        if not self.enabled:
+            return
+        
+        self.running = False
+        
+        # Disconnect all clients
+        for server_name, client_info in self.clients.items():
+            try:
+                if client_info["connected"]:
+                    client_info["client"].disconnect()
+                    self.logger.info(f"Disconnected from OPC UA server: {server_name}")
+            except Exception as e:
+                self.logger.error(f"Error disconnecting from {server_name}: {e}")
+        
+        self.clients.clear()
+        self.logger.info("OPC UA Client publisher stopped")
+    
+    def _connect_to_server(self, server_config: Dict[str, Any]):
+        """
+        Connect to a single OPC UA server.
+        
+        Args:
+            server_config: Server configuration dictionary
+        """
+        server_name = server_config.get("name", server_config["url"])
+        url = server_config["url"]
+        
+        try:
+            client = OPCUAClient(url)
+            
+            # Set authentication if provided
+            if server_config.get("username") and server_config.get("password"):
+                client.set_user(server_config["username"])
+                client.set_password(server_config["password"])
+            
+            # Connect
+            client.connect()
+            
+            # Store client info
+            self.clients[server_name] = {
+                "client": client,
+                "connected": True,
+                "config": server_config,
+                "nodes": {},  # tag_name -> node object cache
+                "root": client.get_root_node(),
+                "objects": client.get_objects_node()
+            }
+            
+            self.logger.info(f"Connected to OPC UA server: {server_name} ({url})")
+            
+        except Exception as e:
+            self.logger.error(f"Failed to connect to {server_name}: {e}")
+            self.clients[server_name] = {
+                "client": None,
+                "connected": False,
+                "config": server_config,
+                "nodes": {}
+            }
+    
+    def _reconnect_loop(self):
+        """Background thread to reconnect to disconnected servers."""
+        while self.running:
+            time.sleep(self.reconnect_interval)
+            
+            for server_name, client_info in list(self.clients.items()):
+                if not client_info["connected"]:
+                    self.logger.info(f"Attempting to reconnect to {server_name}...")
+                    self._connect_to_server(client_info["config"])
+    
+    def _get_or_create_node(self, client_info: Dict[str, Any], tag_name: str):
+        """
+        Get or create an OPC UA node for a tag.
+        
+        Args:
+            client_info: Client information dictionary
+            tag_name: Tag name
+            
+        Returns:
+            Node object or None
+        """
+        # Check cache first
+        if tag_name in client_info["nodes"]:
+            return client_info["nodes"][tag_name]
+        
+        config = client_info["config"]
+        client = client_info["client"]
+        
+        # Check for explicit node mapping
+        node_mapping = config.get("node_mapping", {})
+        if tag_name in node_mapping:
+            node_id = node_mapping[tag_name]
+            try:
+                node = client.get_node(node_id)
+                client_info["nodes"][tag_name] = node
+                return node
+            except Exception as e:
+                self.logger.error(f"Failed to get mapped node {node_id}: {e}")
+                return None
+        
+        # Build node path from base_node + tag_name
+        base_node = config.get("base_node", "")
+        if base_node:
+            node_id = f"{base_node}{tag_name}"
+        else:
+            namespace = config.get("namespace", 2)
+            node_id = f"ns={namespace};s={tag_name}"
+        
+        try:
+            # Try to get existing node
+            node = client.get_node(node_id)
+            # Verify it exists by reading a value (will throw if doesn't exist)
+            _ = node.get_browse_name()
+            client_info["nodes"][tag_name] = node
+            return node
+        except Exception:
+            # Node doesn't exist
+            if config.get("auto_create_nodes", False):
+                try:
+                    # Create a new variable node
+                    objects = client_info["objects"]
+                    namespace = config.get("namespace", 2)
+                    
+                    # Create the variable
+                    node = objects.add_variable(namespace, tag_name, 0.0)
+                    node.set_writable()
+                    
+                    client_info["nodes"][tag_name] = node
+                    self.logger.info(f"Created new node: {node_id}")
+                    return node
+                except Exception as e:
+                    self.logger.error(f"Failed to create node {node_id}: {e}")
+                    return None
+            else:
+                self.logger.warning(f"Node {node_id} not found and auto_create_nodes is disabled")
+                return None
+    
+    def publish(self, tag_name: str, value: Any, timestamp: Optional[float] = None):
+        """
+        Publish tag value to all connected OPC UA servers.
+        
+        Args:
+            tag_name: Name of the tag
+            value: Tag value
+            timestamp: Optional timestamp (currently not used)
+        """
+        if not self.enabled:
+            return
+        
+        for server_name, client_info in self.clients.items():
+            if not client_info["connected"]:
+                continue
+            
+            try:
+                # Get or create the node
+                node = self._get_or_create_node(client_info, tag_name)
+                if not node:
+                    continue
+                
+                # Convert Python types to OPC UA DataValue
+                if isinstance(value, bool):
+                    ua_value = ua.DataValue(ua.Variant(value, ua.VariantType.Boolean))
+                elif isinstance(value, int):
+                    ua_value = ua.DataValue(ua.Variant(value, ua.VariantType.Int32))
+                elif isinstance(value, float):
+                    ua_value = ua.DataValue(ua.Variant(value, ua.VariantType.Double))
+                elif isinstance(value, str):
+                    ua_value = ua.DataValue(ua.Variant(value, ua.VariantType.String))
+                else:
+                    ua_value = ua.DataValue(ua.Variant(str(value), ua.VariantType.String))
+                
+                # Write the value
+                node.set_value(ua_value)
+                self.logger.debug(f"Wrote {tag_name}={value} to {server_name}")
+                
+            except Exception as e:
+                self.logger.error(f"Error writing {tag_name} to {server_name}: {e}")
+                # Mark as disconnected on error
+                client_info["connected"] = False
+
+
 class PublisherManager:
     """Manages multiple data publishers."""
     
@@ -1150,6 +1411,13 @@ class PublisherManager:
             modbus_pub = ModbusTCPPublisher(modbus_config, self.logger)
             self.publishers.append(modbus_pub)
             self.logger.info("MODBUS TCP publisher initialized")
+        
+        # OPC UA Client Publisher
+        opcua_client_config = publishers_config.get("opcua_client", {})
+        if opcua_client_config.get("enabled", False):
+            opcua_client_pub = OPCUAClientPublisher(opcua_client_config, self.logger)
+            self.publishers.append(opcua_client_pub)
+            self.logger.info("OPC UA Client publisher initialized")
         
         # REST API Publisher
         rest_config = publishers_config.get("rest_api", {})

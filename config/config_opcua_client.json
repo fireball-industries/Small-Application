@@ -1,0 +1,72 @@
+{
+  "OPC_ENDPOINT": "opc.tcp://0.0.0.0:4840/freeopcua/server/",
+  "tags": [
+    {
+      "name": "Temperature",
+      "type": "float",
+      "initial_value": 25.5,
+      "min_value": -50.0,
+      "max_value": 150.0,
+      "change_rate": 0.5
+    },
+    {
+      "name": "Pressure",
+      "type": "float",
+      "initial_value": 101.3,
+      "min_value": 90.0,
+      "max_value": 120.0,
+      "change_rate": 0.3
+    },
+    {
+      "name": "FlowRate",
+      "type": "float",
+      "initial_value": 50.0,
+      "min_value": 0.0,
+      "max_value": 200.0,
+      "change_rate": 2.0
+    },
+    {
+      "name": "Counter",
+      "type": "int",
+      "initial_value": 0,
+      "min_value": 0,
+      "max_value": 10000,
+      "change_rate": 1
+    },
+    {
+      "name": "IsRunning",
+      "type": "bool",
+      "initial_value": true
+    }
+  ],
+  "publishers": {
+    "opcua_client": {
+      "enabled": true,
+      "servers": [
+        {
+          "url": "opc.tcp://localhost:4841",
+          "name": "Ignition Server",
+          "username": "",
+          "password": "",
+          "namespace": 2,
+          "base_node": "ns=2;s=Gateway/",
+          "auto_create_nodes": true,
+          "node_mapping": {
+            "Temperature": "ns=2;s=Gateway/Temperature",
+            "Pressure": "ns=2;s=Gateway/Pressure",
+            "FlowRate": "ns=2;s=Gateway/FlowRate",
+            "Counter": "ns=2;s=Gateway/Counter",
+            "IsRunning": "ns=2;s=Gateway/IsRunning"
+          }
+        }
+      ],
+      "reconnect_interval": 5
+    },
+    "rest_api": {
+      "enabled": true,
+      "host": "0.0.0.0",
+      "port": 5001,
+      "cors_enabled": true
+    }
+  }
+}
