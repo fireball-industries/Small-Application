@@ -15,14 +15,6 @@ questions:
   default: true
   group: "Namespace Settings"
 
-# RBAC Configuration
-- variable: rbac.create
-  label: Create RBAC Resources
-  description: "Create Role and RoleBinding for EmberBurn service account (recommended)"
-  type: boolean
-  default: true
-  group: "Security"
-
 # EmberBurn Configuration
 - variable: emberburn.image.tag
   label: EmberBurn Version

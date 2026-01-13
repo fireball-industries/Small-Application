@@ -10,11 +10,6 @@ namespace:
     managed-by: fireball-industries
     podstore-type: industrial-iot
 
-# RBAC configuration
-rbac:
-  # Create Role and RoleBinding for service account
-  create: true
-
 # Pod configuration
 pod:
   replicaCount: 1
