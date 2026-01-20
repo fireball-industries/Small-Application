@@ -77,7 +77,11 @@ jobs:
       - name: Generate artifact attestation
         if: github.event_name != 'pull_request' && github.repository_owner == 'fireball-industries'
         continue-on-error: true
-        uses: actions/attest-bui
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
       
       - name: Inspect multi-arch manifest
         if: github.event_name != 'pull_request'
@@ -106,8 +110,4 @@ jobs:
           echo "Verify which platform you got:" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
           echo "docker image inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest | grep Architecture" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARYld-provenance@v1
-        with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          subject-digest: ${{ steps.build.outputs.digest }}
-          push-to-registry: true
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
