@@ -1,5 +1,15 @@
 # EmberBurn Release Notes
 
+## v3.5.6 — 2026-02-10
+
+### Hotfix: "Launch UI" Proxies to Wrong Port
+
+- **Root cause**: Dashboard picks the **first** `containerPort` for "Launch UI" reverse proxy. `opcua` (4840) was listed before `webui` (5000), so the dashboard proxied to OPC UA binary protocol → `connection refused`.
+- **Fix**: Reordered ports in `deployment.yaml` — `webui` (5000) is now **first**.
+- Added `CAUTION` block + multi-port example to `NETWORKING_GUIDE.md` Section 2d.
+
+---
+
 ## v3.5.5 — 2026-02-10
 
 ### Hotfix: CrashLoopBackOff
