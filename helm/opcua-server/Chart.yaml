@@ -10,8 +10,8 @@ description: |
   persistence, and a beautiful Python Flask web UI for configuration and monitoring.
 
 type: application
-version: 3.5.2
-appVersion: "3.5.2"
+version: 3.5.3
+appVersion: "3.5.3"
 
 keywords:
   - opcua
@@ -28,8 +28,8 @@ keywords:
 
 home: https://fireballz.ai/emberburn
 sources:
+  - https://github.com/Embernet-ai/Emberburn
   - https://github.com/Embernet-ai/helm-charts
-  - https://github.com/Embernet-ai/Small-Application
 
 maintainers:
   - name: Patrick Ryan
@@ -52,7 +52,7 @@ annotations:
   catalog.cattle.io/featured: "true"
 
   # Documentation links
-  catalog.cattle.io/upstream-version: "3.5.2"
+  catalog.cattle.io/upstream-version: "3.5.3"
   fireball.industries/project-type: "industrial-iot-gateway"
   fireball.industries/protocols: "15"
   fireball.industries/web-ui: "true"
