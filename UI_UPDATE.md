@@ -552,7 +552,7 @@ An **OPC UA Tag Generator** is a visual tool for creating and managing OPC UA (I
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
-│ [Embernet Logo]  EMBERBURN              [Dashboard][Tags][Browse]  🔥 │
+│ [Emberburn Logo]                     [Dashboard][Tags][Browse]  🔥 │
 │─────────────────────────────────────────────────────────────────────│
 │                                                                      │
 │  ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐       │
@@ -586,7 +586,7 @@ An **OPC UA Tag Generator** is a visual tool for creating and managing OPC UA (I
 │  │  ▸ Quality/                      │ │                             │ │
 │  └──────────────────────────────────┘ └────────────────────────────┘ │
 │                                                                      │
-│ [EmberNET Emberburn v1.0.0]  [OPC UA: 🟢 Running]         [☀️/🌙] │
+│ [Emberburn v1.0.0]  [OPC UA: 🟢 Running]         [☀️/🌙] │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -933,22 +933,6 @@ Then install with:
 helm install emberburn ./helm/opcua-server -n emberburn --create-namespace
 ```
 
-**Option B: If you cannot remove it (backward compatibility), make it idempotent:**
-```yaml
-# Add server-side apply annotations
-{{- if .Values.namespace.create -}}
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: {{ include "emberburn.namespace" . }}
-  annotations:
-    "helm.sh/resource-policy": keep
-  labels:
-    {{- toYaml .Values.namespace.labels | nindent 4 }}
-    {{- include "emberburn.labels" . | nindent 4 }}
-{{- end }}
-```
-
 ### Required Labels on Pod
 
 The existing deployment template must include these labels for the Industrial Dashboard to discover Emberburn:
@@ -1115,6 +1099,6 @@ The Emberburn UI update achieves two goals:
 
 2. **OPC UA Tag Generator** — The existing tag *monitor* (`/tags` → `tags.html` → `tags.js`) and OPC UA server (`opcua_server.py` with `write_tag()` that already creates tags dynamically) are extended with a new Tag Generator page that allows creating, editing, deleting, and bulk-importing OPC UA tags at runtime. No new OPC UA server library is needed — the Python `opcua` package and server already work.
 
-3. **Helm Chart Fix** — The `namespace.yaml` template in `helm/opcua-server/templates/` is deleted to prevent the namespace ownership error that causes installation failures when the namespace already exists.
+3. **Helm Chart Fix** — The `namespace.yaml` template in `helm/opcua-server/templates/` is deleted to prevent the namespace ownership error that causes installation failures when the namespace already exists. - MAY BE COMPLETED ALREADY
 
 The result is a unified industrial platform where the dashboard provides cluster management and app deployment, and Emberburn provides the protocol-level tag engineering that industrial systems need — with a consistent look and feel across both.

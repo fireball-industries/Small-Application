@@ -1,14 +1,7 @@
 # Default values for EmberBurn - Multi-Protocol Industrial IoT Gateway
 # "Where Data Meets Fire" - Fireball Industries
-
-# Namespace configuration
-namespace:
-  name: emberburn
-  create: true
-  labels:
-    app: emberburn
-    managed-by: fireball-industries
-    podstore-type: industrial-iot
+# NOTE: Do NOT create Namespace resources in Helm charts.
+# Use: helm install <release> ./chart -n <namespace> --create-namespace
 
 # Pod configuration
 pod:
@@ -302,7 +295,7 @@ service:
 
 # Ingress configuration (for Web UI)
 ingress:
-  enabled: true
+  enabled: false
   className: "traefik"
   annotations:
     # cert-manager.io/cluster-issuer: "letsencrypt-prod"
