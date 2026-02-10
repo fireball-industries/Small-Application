@@ -23,7 +23,7 @@ pod:
 emberburn:
   image:
     repository: ghcr.io/embernet-ai/emberburn
-    tag: "3.5.4"
+    tag: "3.5.5"
     pullPolicy: IfNotPresent # Use Always for development, IfNotPresent for production
 
   # OPC UA Server configuration
@@ -88,22 +88,24 @@ emberburn:
           cpu: "2000m"
           memory: "4Gi"
 
-  # Health checks
+  # Health checks - probe the Flask web UI (port 5000), NOT OPC UA (4840).
+  # OPC UA server initialization is slow (tag loading, protocol handshake).
+  # Flask starts instantly and is a reliable liveness indicator.
   livenessProbe:
     enabled: true
     tcpSocket:
-      port: 4840
-    initialDelaySeconds: 30
-    periodSeconds: 10
+      port: 5000
+    initialDelaySeconds: 45
+    periodSeconds: 15
     timeoutSeconds: 5
-    failureThreshold: 3
+    failureThreshold: 6
 
   readinessProbe:
     enabled: true
     tcpSocket:
-      port: 4840
-    initialDelaySeconds: 10
-    periodSeconds: 5
+      port: 5000
+    initialDelaySeconds: 15
+    periodSeconds: 10
     timeoutSeconds: 3
     failureThreshold: 3
 
