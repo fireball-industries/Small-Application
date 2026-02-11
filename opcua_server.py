@@ -463,6 +463,23 @@ class OPCUAServer:
     def shutdown(self):
         """Gracefully shutdown the server."""
         self.logger.info("Shutting down server...")
+        
+        # Stop publishers first
+        if self.publisher_manager:
+            try:
+                self.publisher_manager.stop_all()
+                self.logger.info("Publishers stopped successfully")
+            except Exception as e:
+                self.logger.error(f"Error stopping publishers: {e}")
+        
+        # Stop OPC UA server
+        if self.server:
+            try:
+                self.server.stop()
+                self.logger.info("Server stopped successfully")
+            except Exception as e:
+                self.logger.error(f"Error during shutdown: {e}")
+        print("\nServer stopped. Goodbye!\n")
     
     def _setup_tag_metadata(self):
         """Setup tag metadata for publishers that need it."""
@@ -487,23 +504,6 @@ class OPCUAServer:
                 publisher.set_write_callback(self.write_tag)
                 self.logger.info("Transformation publisher write callback configured")
                 break
-        
-        # Stop publishers first
-        if self.publisher_manager:
-            try:
-                self.publisher_manager.stop_all()
-                self.logger.info("Publishers stopped successfully")
-            except Exception as e:
-                self.logger.error(f"Error stopping publishers: {e}")
-        
-        # Stop OPC UA server
-        if self.server:
-            try:
-                self.server.stop()
-                self.logger.info("Server stopped successfully")
-            except Exception as e:
-                self.logger.error(f"Error during shutdown: {e}")
-        print("\nServer stopped. Goodbye!\n")
 
 
 def main():
