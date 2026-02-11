@@ -1,5 +1,15 @@
 # EmberBurn Release Notes
 
+## v3.5.8 — 2026-02-10
+
+### Feature: Proxy-Aware Static Asset Loading
+
+- **Problem**: When loaded inside the Embernet Dashboard iframe via `/api/proxy`, CSS/JS/images failed to load because absolute paths (`/static/web/...`) resolved against the dashboard domain.
+- **Fix**: Added `after_request` middleware in `publishers.py` that detects reverse proxy (`X-Forwarded-For` header) and rewrites all `href`/`src`/`fetch()` paths to route through `/api/proxy?target=http://PodIP:5000/...`.
+- Direct access (no proxy) is unaffected — rewriting only activates when proxied.
+
+---
+
 ## v3.5.7 — 2026-02-10
 
 ### Critical Fix: Server Killing Itself on Startup

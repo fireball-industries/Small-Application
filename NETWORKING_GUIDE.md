@@ -582,6 +582,40 @@ embernet.io/app-icon: "fire"
 
 ### App works locally but not through dashboard proxy
 
+**Static assets (CSS/JS/images) broken in iframe:**
+
+When the dashboard proxies to your app via `/api/proxy?target=http://PodIP:PORT`, Flask templates generate absolute paths like `/static/web/css/style.css`. The browser resolves these against the dashboard domain (`https://industrial.embernet.ai/static/web/...`) — not your app. Result: no CSS, no JS, no images.
+
+**Fix:** Add a Flask `after_request` middleware that detects the proxy and rewrites all absolute paths to route back through it:
+
+```python
+@app.after_request
+def rewrite_proxy_urls(response):
+    # Only rewrite when behind a reverse proxy (Go's httputil sets X-Forwarded-For)
+    if not request.headers.get('X-Forwarded-For'):
+        return response
+    if not response.content_type or 'text/html' not in response.content_type:
+        return response
+    
+    # Build proxy prefix using our own host (Pod IP:port)
+    proxy_base = f'/api/proxy?target=http://{request.host}'
+    
+    data = response.get_data(as_text=True)
+    data = data.replace('href="/', f'href="{proxy_base}/')
+    data = data.replace("href='/", f"href='{proxy_base}/")
+    data = data.replace('src="/', f'src="{proxy_base}/')
+    data = data.replace("src='/", f"src='{proxy_base}/")
+    data = data.replace("fetch('/", f"fetch('{proxy_base}/")
+    data = data.replace('fetch("/', f'fetch("{proxy_base}/')
+    response.set_data(data)
+    return response
+```
+
+> [!IMPORTANT]
+> This pattern applies to **any** web app served through the Embernet Dashboard proxy, not just Flask. Node.js, Go, etc. need equivalent response rewriting if they serve HTML with absolute asset paths.
+
+---
+
 **Diagnostic steps:**
 
 ```bash

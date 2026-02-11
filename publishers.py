@@ -293,6 +293,34 @@ class RESTAPIPublisher(DataPublisher):
         except ImportError as e:
             self.logger.warning(f"Web UI Blueprint not available: {e}")
         
+        # Proxy-aware URL rewriting for dashboard iframe embedding.
+        # When the Embernet Dashboard proxies to us via /api/proxy?target=http://PodIP:5000,
+        # all absolute paths in our HTML (e.g. /static/web/css/style.css) must be rewritten
+        # to go back through the proxy, otherwise the browser requests them from the
+        # dashboard domain and gets 404s.
+        @self.app.after_request
+        def rewrite_proxy_urls(response):
+            # Only rewrite when behind a reverse proxy (Go's httputil sets X-Forwarded-For)
+            if not request.headers.get('X-Forwarded-For'):
+                return response
+            if not response.content_type or 'text/html' not in response.content_type:
+                return response
+            
+            # Build the proxy prefix using our own host (Pod IP:port)
+            proxy_base = f'/api/proxy?target=http://{request.host}'
+            
+            data = response.get_data(as_text=True)
+            # Rewrite absolute paths in href="" and src="" attributes
+            data = data.replace('href="/', f'href="{proxy_base}/')
+            data = data.replace("href='/", f"href='{proxy_base}/")
+            data = data.replace('src="/', f'src="{proxy_base}/')
+            data = data.replace("src='/", f"src='{proxy_base}/")
+            # Rewrite fetch/XHR API calls that use absolute paths
+            data = data.replace("fetch('/", f"fetch('{proxy_base}/")
+            data = data.replace('fetch("/', f'fetch("{proxy_base}/')
+            response.set_data(data)
+            return response
+        
         # Setup API routes
         self.setup_routes()
     
