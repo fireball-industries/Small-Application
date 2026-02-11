@@ -1,5 +1,19 @@
 # EmberBurn Release Notes
 
+## v3.10.0 — 2026-02-11
+
+### UI Fixes
+
+- **Fixed**: Navbar logo showed broken Embernet image inside dashboard iframe. Replaced with `emberburn-chart-icon.png` — EmberBurn now uses its own branding, not the Embernet parent logo.
+- **Fixed**: Dashboard showed "Loading tag data..." when 0 tags are running. Now shows "No tags configured".
+- **Fixed**: Publishers, Alarms, and Config pages stuck on infinite loading spinner when accessed through the Embernet Dashboard iframe proxy.
+  - **Root cause**: `api.js` used absolute path `/api` for fetch calls. The proxy URL rewriter in `publishers.py` only rewrites `text/html` responses — `api.js` is served as `application/javascript` so its paths were never rewritten. All API calls hit the dashboard host instead of routing through the proxy.
+  - **Fix**: Changed `API_BASE` from `/api` (absolute) to `api` (relative). Browser resolves relative URLs against current page URL, which already includes the proxy prefix.
+- Image tag: `ghcr.io/embernet-ai/emberburn:3.10.0`
+- Multi-arch build (amd64/arm64) via GitHub Actions on `v3.10.0` tag
+
+---
+
 ## v3.9.0 — 2026-02-11
 
 ### Fix: GHCR 403 Forbidden (Image Pull Failure)

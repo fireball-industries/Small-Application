@@ -1,23 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Emberburn — Industrial IoT Gateway{% endblock %}</title>
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('web_ui.static', filename='images/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32"
+        href="{{ url_for('web_ui.static', filename='images/favicon-32x32.png') }}">
     <link rel="stylesheet" href="{{ url_for('web_ui.static', filename='css/style.css') }}">
     {% block extra_css %}{% endblock %}
 </head>
+
 <body>
     <!-- Dark mode init — must run before first paint -->
     <script>
-    (function () {
-        var stored = localStorage.getItem('theme');
-        if (stored === 'light') {
-            document.body.classList.add('light-mode');
-        }
-        // Default is dark (no class needed)
-    })();
+        (function () {
+            var stored = localStorage.getItem('theme');
+            if (stored === 'light') {
+                document.body.classList.add('light-mode');
+            }
+            // Default is dark (no class needed)
+        })();
     </script>
 
     <div class="app-container">
@@ -25,26 +28,34 @@
         <div class="header">
             <div class="header-left">
                 <div class="logo-container">
-                    <img id="header-logo" src="{{ url_for('web_ui.static', filename='images/embernet-white.png') }}"
-                         alt="Embernet" class="logo-image" />
+                    <img id="header-logo"
+                        src="{{ url_for('web_ui.static', filename='images/emberburn-chart-icon.png') }}" alt="EmberBurn"
+                        class="logo-image" />
                 </div>
                 <span class="app-title">Emberburn</span>
             </div>
             <div class="header-right">
                 <nav class="nav-bar">
-                    <a href="{{ url_for('web_ui.index') }}" class="nav-link {% if request.endpoint == 'web_ui.index' %}active{% endif %}">Dashboard</a>
-                    <a href="{{ url_for('web_ui.tags') }}" class="nav-link {% if request.endpoint == 'web_ui.tags' %}active{% endif %}">Tags</a>
-                    <a href="{{ url_for('web_ui.tag_generator') }}" class="nav-link {% if request.endpoint == 'web_ui.tag_generator' %}active{% endif %}">Tag Generator</a>
-                    <a href="{{ url_for('web_ui.publishers') }}" class="nav-link {% if request.endpoint == 'web_ui.publishers' %}active{% endif %}">Publishers</a>
-                    <a href="{{ url_for('web_ui.alarms') }}" class="nav-link {% if request.endpoint == 'web_ui.alarms' %}active{% endif %}">Alarms</a>
-                    <a href="{{ url_for('web_ui.config') }}" class="nav-link {% if request.endpoint == 'web_ui.config' %}active{% endif %}">Config</a>
+                    <a href="{{ url_for('web_ui.index') }}"
+                        class="nav-link {% if request.endpoint == 'web_ui.index' %}active{% endif %}">Dashboard</a>
+                    <a href="{{ url_for('web_ui.tags') }}"
+                        class="nav-link {% if request.endpoint == 'web_ui.tags' %}active{% endif %}">Tags</a>
+                    <a href="{{ url_for('web_ui.tag_generator') }}"
+                        class="nav-link {% if request.endpoint == 'web_ui.tag_generator' %}active{% endif %}">Tag
+                        Generator</a>
+                    <a href="{{ url_for('web_ui.publishers') }}"
+                        class="nav-link {% if request.endpoint == 'web_ui.publishers' %}active{% endif %}">Publishers</a>
+                    <a href="{{ url_for('web_ui.alarms') }}"
+                        class="nav-link {% if request.endpoint == 'web_ui.alarms' %}active{% endif %}">Alarms</a>
+                    <a href="{{ url_for('web_ui.config') }}"
+                        class="nav-link {% if request.endpoint == 'web_ui.config' %}active{% endif %}">Config</a>
                 </nav>
                 <button class="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">
                     <span id="theme-toggle-icon">☀️</span>
                 </button>
                 <div class="company-logo-container">
-                    <img src="{{ url_for('web_ui.static', filename='images/fireball.png') }}"
-                         alt="Fireball Industries" class="company-logo-image" />
+                    <img src="{{ url_for('web_ui.static', filename='images/fireball.png') }}" alt="Fireball Industries"
+                        class="company-logo-image" />
                 </div>
             </div>
         </div>
@@ -66,34 +77,33 @@
     <script src="{{ url_for('web_ui.static', filename='js/api.js') }}"></script>
     <script src="{{ url_for('web_ui.static', filename='js/app.js') }}"></script>
     <script>
-    // Theme toggle
-    function toggleTheme() {
-        var isLight = document.body.classList.toggle('light-mode');
-        localStorage.setItem('theme', isLight ? 'light' : 'dark');
+        // Theme toggle
+        function toggleTheme() {
+            var isLight = document.body.classList.toggle('light-mode');
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
 
-        var logo = document.getElementById('header-logo');
-        if (logo) {
-            logo.src = isLight
-                ? "{{ url_for('web_ui.static', filename='images/embernet.png') }}"
-                : "{{ url_for('web_ui.static', filename='images/embernet-white.png') }}";
-        }
-
-        var icon = document.getElementById('theme-toggle-icon');
-        if (icon) {
-            icon.textContent = isLight ? '🌙' : '☀️';
-        }
-    }
-
-    // Sync icon on load
-    (function () {
-        if (document.body.classList.contains('light-mode')) {
-            var icon = document.getElementById('theme-toggle-icon');
-            if (icon) icon.textContent = '🌙';
             var logo = document.getElementById('header-logo');
-            if (logo) logo.src = "{{ url_for('web_ui.static', filename='images/embernet.png') }}";
+            if (logo) {
+                logo.src = "{{ url_for('web_ui.static', filename='images/emberburn-chart-icon.png') }}";
+            }
+
+            var icon = document.getElementById('theme-toggle-icon');
+            if (icon) {
+                icon.textContent = isLight ? '🌙' : '☀️';
+            }
         }
-    })();
+
+        // Sync icon on load
+        (function () {
+            if (document.body.classList.contains('light-mode')) {
+                var icon = document.getElementById('theme-toggle-icon');
+                if (icon) icon.textContent = '🌙';
+                var logo = document.getElementById('header-logo');
+                if (logo) logo.src = "{{ url_for('web_ui.static', filename='images/emberburn-chart-icon.png') }}";
+            }
+        })();
     </script>
     {% block extra_js %}{% endblock %}
 </body>
+
 </html>

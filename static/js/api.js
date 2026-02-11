@@ -1,7 +1,11 @@
 // EmberBurn API Client
 // Handles all API communication with the backend
 
-const API_BASE = '/api';
+// Use a relative path so fetch() resolves against the current page URL.
+// This is critical when EmberBurn is accessed via the Embernet Dashboard
+// iframe proxy (/api/proxy?target=...) — absolute paths like '/api' would
+// hit the dashboard host instead of routing back through the proxy.
+const API_BASE = 'api';
 
 class EmberBurnAPI {
     constructor() {
