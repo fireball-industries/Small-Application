@@ -1,5 +1,16 @@
 # EmberBurn Release Notes
 
+## v3.5.7 — 2026-02-10
+
+### Critical Fix: Server Killing Itself on Startup
+
+- **Root cause**: Shutdown logic (`stop_all()`, `server.stop()`) was inside `_setup_transformation_callback()` instead of `shutdown()`. Called during init → Flask and OPC UA died immediately after starting.
+- **Fix**: Moved all stop/shutdown code into `shutdown()` method where it belongs.
+- Flask (5000) and OPC UA (4840) now stay alive after initialization.
+- Added Troubleshooting section to `NETWORKING_GUIDE.md`.
+
+---
+
 ## v3.5.6 — 2026-02-10
 
 ### Hotfix: "Launch UI" Proxies to Wrong Port

@@ -492,3 +492,116 @@ diff <(helm template rel-a ./your-chart | grep "name:") <(helm template rel-b ./
 ```
 
 If all 9 checks pass, your chart is compliant with the Embernet Industrial Dashboard and "Launch UI" will work.
+
+---
+
+## 8. Troubleshooting
+
+### "Launch UI" shows "Not Found" or "connection refused"
+
+**Symptom:** Clicking "Launch UI" on a deployed app card opens an iframe that shows a Flask 404, a binary protocol error, or `connection refused`.
+
+**Cause:** The dashboard picks the **first `containerPort`** in the pod spec for the reverse proxy target. If a non-HTTP port (e.g., OPC UA on 4840) is listed before the web UI port, the dashboard proxies to the wrong service.
+
+**Fix:** Reorder `ports:` in your `deployment.yaml` so the **web UI / HTTP port is listed first**:
+
+```yaml
+        ports:
+          # Web UI MUST be first — dashboard picks this for "Launch UI"
+          - name: http
+            containerPort: 5000
+            protocol: TCP
+          # Industrial protocol ports listed after
+          - name: opcua
+            containerPort: 4840
+            protocol: TCP
+```
+
+---
+
+### CrashLoopBackOff — liveness probe on wrong port
+
+**Symptom:** Pod starts, runs briefly, then enters `CrashLoopBackOff`. Events show `Liveness probe failed: dial tcp <IP>:<PORT>: connect: connection refused`.
+
+**Cause:** Liveness/readiness probes are targeting a port that is slow to bind (e.g., OPC UA 4840 takes time to load tags and initialize the protocol handler). K8s kills the container before the port is ready.
+
+**Fix:** Point probes at your **fastest-starting port** (usually the web UI / Flask / HTTP server):
+
+```yaml
+  livenessProbe:
+    enabled: true
+    tcpSocket:
+      port: 5000        # Flask starts instantly — don't probe slow ports
+    initialDelaySeconds: 45
+    periodSeconds: 15
+    failureThreshold: 6  # Give extra startup headroom
+
+  readinessProbe:
+    enabled: true
+    tcpSocket:
+      port: 5000
+    initialDelaySeconds: 15
+    periodSeconds: 10
+    failureThreshold: 3
+```
+
+---
+
+### Server dies immediately after startup
+
+**Symptom:** All ports bind successfully during startup, but within seconds everything stops listening. Probes fail, pod crashes. Logs may show `Server stopped. Goodbye!` immediately after `Publishers started`.
+
+**Cause:** Shutdown logic (e.g., `publisher_manager.stop_all()`, `server.stop()`) is accidentally placed in a method called during initialization instead of the `shutdown()` method. The server starts, initializes, then immediately shuts itself down.
+
+**Diagnostic:**
+```bash
+kubectl logs <pod-name> | head -50
+# Look for "Server stopped" appearing right after "Server started"
+```
+
+**Fix:** Ensure all `stop()` / `stop_all()` calls are **only** inside the `shutdown()` method or signal handler — never in `__init__()`, `setup()`, or callback registration methods.
+
+---
+
+### Invalid Kubernetes label values
+
+**Symptom:** `helm install` fails with `invalid label value` or pod fails to schedule.
+
+**Cause:** K8s label values must match the regex `^[a-zA-Z0-9]([a-zA-Z0-9._-]*[a-zA-Z0-9])?$` (max 63 chars). Emojis, spaces, and special characters are **not valid**.
+
+**Fix:**
+```yaml
+# ❌ Invalid
+embernet.io/app-icon: "🔥"
+
+# ✅ Valid
+embernet.io/app-icon: "fire"
+```
+
+---
+
+### App works locally but not through dashboard proxy
+
+**Diagnostic steps:**
+
+```bash
+# 1. Get the pod IP
+kubectl get pod <pod> -o wide
+# Look for IP in 10.42.x.x range (K3s pod network)
+
+# 2. Test from inside the cluster (exec into any pod)
+kubectl exec -it <any-running-pod> -- curl -s http://<POD_IP>:<PORT>/
+# Expected: 200 OK with HTML
+
+# 3. Check the pod has the right labels
+kubectl get pod <pod> --show-labels
+# Must have: embernet.io/store-app=true, app=<release-fullname>
+
+# 4. Check the service matches
+kubectl get svc -l app=<release-fullname>
+# Must exist with matching selector
+
+# 5. Check container ports are declared
+kubectl get pod <pod> -o jsonpath='{.spec.containers[*].ports[*].containerPort}'
+# Must show at least one port, HTTP port should be first
+```
