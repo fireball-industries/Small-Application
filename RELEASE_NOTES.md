@@ -1,5 +1,16 @@
 # EmberBurn Release Notes
 
+## v3.10.1 — 2026-02-12
+
+### Fix: ImagePullBackOff / 403 Forbidden on GHCR
+
+- **Root cause**: `docker-publish.yml` metadata-action included `type=sha`, generating SHA-digest tags (e.g., `sha-02870d...`). When workflow was triggered by branch push instead of semver tag, only SHA/branch tags were pushed — no `3.10.0` version tag existed in GHCR, causing 403 on pull.
+- **Fix**: Removed `type=sha` from `docker/metadata-action` tag rules. Only semver, branch, PR, and `latest` tags are now generated.
+- Image tag: `ghcr.io/embernet-ai/emberburn:3.10.1`
+- Multi-arch build (amd64/arm64) via GitHub Actions on `v3.10.1` tag
+
+---
+
 ## v3.10.0 — 2026-02-11
 
 ### UI Fixes
