@@ -1,5 +1,46 @@
 # EmberBurn Release Notes
 
+## v4.0.4 — 2026-02-12
+
+### Cleanup: Remove broken releases, fix workflow triggers
+
+- **Removed** old broken releases (v4.0.1, v4.0.2, v4.0.3) and their tgz files from the repo
+- **Cleaned** index.yaml to only contain the current version
+- **Docker workflow** now only triggers on `v*` tags and `workflow_dispatch` — no more branch pushes or release events causing racing builds
+- **Note**: CodeQL "Push on main" and built-in "pages build and deployment" are GitHub repo settings — disable CodeQL in Settings > Code Security, and set Pages source to "GitHub Actions" in Settings > Pages
+- **Chart version**: `4.0.4`, appVersion: `4.0.4`
+- Image tag: `ghcr.io/embernet-ai/emberburn:4.0.4`
+- Helm chart: `https://embernet-ai.github.io/Emberburn/emberburn-4.0.4.tgz`
+- Multi-arch build (amd64/arm64) via GitHub Actions on `v4.0.4` tag
+
+---
+
+## v4.0.3 — 2026-02-12
+
+### Fix: Workflow triggers causing image overwrites
+
+- **Root cause**: Docker build workflow triggered on `push to main`, `v* tags`, AND `release published` — causing 3 simultaneous builds that raced and overwrote the working `latest` manifest with a broken one
+- **Fix**: Stripped workflow down to only trigger on `v*` tags and `workflow_dispatch`. No more branch push or release event builds.
+- **Chart version**: `4.0.3`, appVersion: `4.0.3`
+- Image tag: `ghcr.io/embernet-ai/emberburn:4.0.3`
+- Helm chart: `https://embernet-ai.github.io/Emberburn/emberburn-4.0.3.tgz`
+- Multi-arch build (amd64/arm64) via GitHub Actions on `v4.0.3` tag
+
+---
+
+## v4.0.2 — 2026-02-12
+
+### Fix: Image tag 4.0.1 never published — 403 on pull
+
+- **Root cause**: Chart.yaml and values.yaml were bumped to `4.0.1` but no `v4.0.1` git tag was pushed, so no container image was built. GHCR returns 403 (not 404) for non-existent tags on public repos, making it look like an auth issue.
+- **Fix**: Bumped all versions to `4.0.2`, will push `v4.0.2` git tag to trigger GitHub Actions multi-arch build
+- **Chart version**: `4.0.2`, appVersion: `4.0.2`
+- Image tag: `ghcr.io/embernet-ai/emberburn:4.0.2`
+- Helm chart: `https://embernet-ai.github.io/Emberburn/emberburn-4.0.2.tgz`
+- Multi-arch build (amd64/arm64) via GitHub Actions on `v4.0.2` tag
+
+---
+
 ## v4.0.0 — 2026-02-12
 
 ### Major Release: Complete Helm Chart + Container Image
