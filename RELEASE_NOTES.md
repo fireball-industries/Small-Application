@@ -1,5 +1,18 @@
 # EmberBurn Release Notes
 
+## v4.0.2 — 2026-02-12
+
+### Fix: Image tag 4.0.1 never published — 403 on pull
+
+- **Root cause**: Chart.yaml and values.yaml were bumped to `4.0.1` but no `v4.0.1` git tag was pushed, so no container image was built. GHCR returns 403 (not 404) for non-existent tags on public repos, making it look like an auth issue.
+- **Fix**: Bumped all versions to `4.0.2`, will push `v4.0.2` git tag to trigger GitHub Actions multi-arch build
+- **Chart version**: `4.0.2`, appVersion: `4.0.2`
+- Image tag: `ghcr.io/embernet-ai/emberburn:4.0.2`
+- Helm chart: `https://embernet-ai.github.io/Emberburn/emberburn-4.0.2.tgz`
+- Multi-arch build (amd64/arm64) via GitHub Actions on `v4.0.2` tag
+
+---
+
 ## v4.0.0 — 2026-02-12
 
 ### Major Release: Complete Helm Chart + Container Image
