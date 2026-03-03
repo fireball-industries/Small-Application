@@ -13,7 +13,7 @@ with open("requirements.txt", "r", encoding="utf-8") as fh:
 
 setup(
     name="emberburn",
-    version="1.0.3",
+    version="4.0.6",
     author="Patrick Ryan",
     author_email="patrick@fireball-industries.com",
     description="Multi-Protocol Industrial IoT Gateway with OPC UA Server",

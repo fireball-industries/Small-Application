@@ -1,5 +1,22 @@
 # EmberBurn Release Notes
 
+## v4.0.6 — 2026-03-03
+
+### Helm Chart Enhancements & Template Improvements
+
+- **Added** `embernet.ai/app-name` label to webui service for Embernet Dashboard integration
+- **Added** `display-name` annotation, `device` label, and `imagePullSecrets` support to Helm chart
+- **Updated** deployment template with improved label selectors and resource configuration
+- **Updated** `NOTES.txt` with Embernet Dashboard onboarding instructions
+- **Added** comprehensive Helm chart README documentation
+- **Added** Helm chart alignment & phased implementation planning docs
+- **Chart version**: `4.0.6`, appVersion: `4.0.6`
+- Image tag: `ghcr.io/embernet-ai/emberburn:4.0.6`
+- Helm chart: `https://embernet-ai.github.io/Emberburn/emberburn-4.0.6.tgz`
+- Multi-arch build (amd64/arm64) via GitHub Actions on `v4.0.6` tag
+
+---
+
 ## v4.0.5 — 2026-02-13
 
 ### Fix: Docker tags only from tagged releases
