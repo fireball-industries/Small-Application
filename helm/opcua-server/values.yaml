@@ -312,6 +312,18 @@ ingress:
   #    hosts:
   #      - emberburn.example.com
 
+# Embernet Dashboard integration
+embernet:
+  appName: ""              # Defaults to .Chart.Name ("emberburn")
+  displayName: ""          # Annotation: "Plant Floor / EmberBurn Production"
+  guiType: "web"           # "web" | "shell" | "web+shell" | "none"
+  device: ""               # Digital twin device: "plc-conveyor-01"
+  appIcon: "fireball.png"  # Icon filename from static/images/
+
+# Image pull secrets for private registries
+imagePullSecrets: []
+#  - name: ghcr-pull-secret
+
 # Node selector
 nodeSelector: {}
 #  node-role.kubernetes.io/industrial-iot: "true"

@@ -21,9 +21,11 @@ spec:
     metadata:
       labels:
         {{- include "emberburn.selectorLabels" . | nindent 8 }}
-        embernet.io/store-app: "true"
-        embernet.io/app-name: {{ .Chart.Name | quote }}
-        embernet.io/app-icon: "fire"
+        embernet.ai/store-app: "true"
+        embernet.ai/app-name: {{ .Values.embernet.appName | default .Chart.Name | quote }}
+        embernet.ai/app-icon: {{ .Values.embernet.appIcon | default "fireball.png" | quote }}
+        embernet.ai/gui-port: {{ .Values.emberburn.ports.webui | quote }}
+        embernet.ai/gui-type: {{ .Values.embernet.guiType | default "web" | quote }}
         {{- with .Values.pod.labels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
