@@ -1,463 +1,267 @@
-# Emberburn for Testing & Simulation
-> *Because Your Production Environment is Too Precious to Test On*
-> 
-> **By Patrick Ryan, CTO @ Fireball Industries**  
-> *"I put the 'fun' in 'functional testing' (citation needed)"*
+# 🔥 EMBERBURN 🔥
+### The Industrial Simulator That Got Completely Out of Hand
 
-> Sometimes you need fake industrial data that's more reliable than your actual production environment. This is that.
+> **By Patrick Ryan, CTO @ Fireball Industries**
+>
+> *"I started building a simple OPC UA server. I blacked out. When I came to, it supported 15 protocols and had a web UI. I regret nothing."*
 
-A lightweight, configurable server built with Python that simulates industrial process tags **AND publishes data to 15 different protocols simultaneously**. Perfect for testing Ignition Edge, SCADA systems, or any OPC UA client without needing actual hardware. Or money. Or patience.
+---
 
-Now with MQTT, REST API, Sparkplug B, Kafka, AMQP, WebSocket, MODBUS TCP, GraphQL, InfluxDB, Alarms, OPC UA Client, Prometheus, SQLite Persistence, Data Transformation, AND a beautiful web-based configuration UI! (Yes, we got carried away. No, we're not sorry.)
+Look, you clicked on this repo, so either you're into industrial automation, you Googled something cursed, or GitHub's algorithm finally snapped. Either way — welcome. Buckle up. This README is the only therapy session you're getting.
 
-## What Does This Actually Do?
-*The TL;DR for People With Deadlines*
+## So What the Hell Is This?
 
-Spins up an OPC UA server with customizable tags that can:
-- **Random values**: Because chaos is a feature, not a bug ✨
-- **Sine waves**: For that smooth, oscillating aesthetic (engineers love this stuff)
-- **Incrementing counters**: They go up. Sometimes they reset. It's thrilling, really.
-- **Static values**: For when you want your simulation to be as exciting as watching paint dry
-- **🔥 Multi-protocol publishing**: Stream data to MQTT, REST API, Kafka, and 6 other protocols simultaneously! (We have a problem and that problem is protocol addiction)
+Emberburn is a **fully simulated industrial data gateway** written in Python. It pretends to be an entire factory floor so you don't have to buy one. It generates fake-but-realistic OPC UA tag data — temperatures, pressures, counters, booleans, strings, the whole nine yards — and then absolutely **firehoses** that data out to every protocol known to mankind.
 
-Great for development, testing, demos, or just pretending you have a fully instrumented factory.
+Think of it as a digital twin, except the twin has ADHD and subscriptions to 15 different messaging services.
 
-**Fun fact:** This started as a simple OPC UA server. Then feature creep happened. Now it's a Swiss Army knife of industrial protocols.
-*The Kitchen Sink Approach to Industrial Protocols*
+**The core loop is stupidly simple:**
+1. Spin up an OPC UA server
+2. Create tags that simulate industrial data (random noise, sine waves, incrementing counters, or just... sit there)
+3. Publish that data to literally whatever protocol your stakeholders are asking about this week
+4. Serve it all through a sleek fire-themed web dashboard because we're not animals
 
-- 📊 Multiple data types (int, float, string, bool) - Because variety is the spice of life
-- 🎲 Configurable simulation modes (random, sine wave, increment, static) - Choose your chaos level
-- 🔧 JSON-based configuration (because YAML has enough problems) - Fight me
-- 🐳 Easy deployment with systemd service files - For when you want it running forever
-- 📝 Comprehensive logging (so you know exactly when things go sideways) - Narrator: They will
-- 🚀 Zero hardware requirements (finally!) - Your wallet thanks you
-- **🆕 MQTT Publisher**: Stream real-time tag data to any MQTT broker - IoT approved ✓
-- **🆕 Sparkplug B**: Native Ignition Edge protocol support - Inductive Automation's favorite
-- **🆕 Apache Kafka**: Enterprise-grade data streaming - For when you need to justify that budget
-- **🆕 AMQP (RabbitMQ)**: Enterprise messaging - The rabbit is still hopping
-- **🆕 WebSocket**: Real-time browser updates - Make those dashboards dance
-- **🆕 REST API**: Query and write tags via HTTP endpoints - The protocol even your PM understands
-- **🆕 GraphQL API**: Modern query interface - REST's cooler younger sibling
-- **🆕 MODBUS TCP**: Legacy PLC and SCADA support - Respect your elders (even if they're from 1979)
-- **🆕 InfluxDB**: Time-series database storage + Grafana dashboards - Historical data that doesn't lie
-- **🆕 Alarms**: Threshold-based alerting via email/Slack/SMS - Sleep soundly (or don't, when things break)
-- **🆕 OPC UA Client**: Push data to other OPC UA servers (Ignition, historians) - Bidirectional baby!
-- **🆕 Prometheus**: Operational metrics (uptime, message counts, errors) - Monitor all the things!
-- **🆕 SQLite Persistence**: Local data storage with historical tag values and audit logging - Never lose data again!
-- **🆕 Data Transformation**: Unit conversions, scaling, and computed tags - Transform data on the fly!
-- **🆕 Multi-Protocol**: Run 15 protocols simultaneously - Because we have issues
-- **🔥 EmberBurn Web UI**: Beautiful **Python Flask** web application for configuration and monitoring - Professional, scalable, no build step!
-- **🏗️ Multi-Architecture Support**: Native ARM64 and AMD64 Docker images - Run on Raspberry Pi, AWS Graviton, Apple Silicon, and traditional x86 servers!
+That's it. That's the app. The rest is just scope creep that I've chosen to rebrand as "features."
 
-## Quick Start
+## Why Does This Exist?
 
-### Installation
+Because every industrial automation engineer has had this exact conversation:
 
-```bash
-# Clone this bad boy
-git clone <your-repo-url>
-cd Small-Application
+> **You:** "I need test data to develop against."
+>
+> **Your Boss:** "Just connect to the production PLC."
+>
+> **You:** "The one controlling the $4 million press that will literally crush things if I mess up?"
+>
+> **Your Boss:** "Yeah that one."
+>
+> **You:** *(opens laptop, starts building Emberburn)*
 
-# Install dependencies
-pip install -r requirements.txt
-```
+Real PLCs cost money. Real SCADA systems cost *more* money. Real production environments cost "update your resume" money when you break them. Emberburn costs you nothing but the mass of Python packages currently having a party in your virtual environment.
 
-### Helm Installation
+**Use it for:**
+- 🧪 **Development** — Build and test your OPC UA clients against something that won't fire you
+- 🎭 **Demos** — Impress stakeholders with "live data" that has a 100% uptime SLA (it's fake, it literally can't fail)
+- 🔌 **Integration Testing** — Validate your SCADA/HMI/historian pipelines without holding anyone's production environment hostage
+- 📚 **Training** — Teach people OPC UA without needing a $50K PLC training rig
+- 🌉 **Protocol Bridging** — OPC UA to MQTT? OPC UA to Kafka? OPC UA to carrier pigeon? (okay not that last one... yet)
+- 💀 **Chaos Engineering** — Send garbage data to your systems on purpose and see what happens. Growth mindset.
 
-Install directly from our Helm repository:
+## The Protocol Addiction Problem (15 and Counting)
 
-```bash
-# Add the Helm repository
-helm repo add emberburn https://embernet-ai.github.io/Small-Application
+What started as "let me add MQTT real quick" has spiraled into something my therapist would describe as "concerning." Here's the full damage report:
 
-# Update repositories
-helm repo update
+| Protocol | What It Does | Why I Added It | Emotional State When I Added It |
+|----------|-------------|----------------|-------------------------------|
+| **OPC UA Server** | The core. Serves tags to any OPC UA client. | This was the original idea. Pure. Innocent. | 😊 Hopeful |
+| **MQTT** | Publishes tag data to any MQTT broker | "IoT is the future" | 🤔 Optimistic |
+| **Sparkplug B** | Native Ignition Edge protocol | "Inductive will love this" | 😏 Strategic |
+| **REST API** | HTTP endpoints for tag CRUD | "Even my PM knows what REST is" | 😐 Practical |
+| **GraphQL** | Modern query interface for tags | "REST is so 2015" | 🧐 Pretentious |
+| **Apache Kafka** | Enterprise event streaming | "I need to justify my Confluent subscription" | 💼 Corporate |
+| **AMQP (RabbitMQ)** | Enterprise message queuing | "The rabbit just keeps hopping" | 🐰 Unhinged |
+| **WebSocket** | Real-time browser push | "Dashboards should dance" | 💃 Vibing |
+| **MODBUS TCP** | Legacy PLC and SCADA comms | "Respect your elders (even from 1979)" | 👴 Nostalgic |
+| **InfluxDB** | Time-series database storage | "I should probably store this somewhere" | 📊 Responsible |
+| **Prometheus** | Operational metrics endpoint | "Gotta monitor the thing that monitors things" | 🤯 Meta |
+| **OPC UA Client** | Push data TO other OPC UA servers | "Bidirectional baby" | 🔄 Chaotic |
+| **Alarms** | Threshold alerting via email/Slack/SMS | "Wake me up at 3AM, I dare you" | 😴 Masochistic |
+| **SQLite Persistence** | Local historical storage + audit logs | "Data should survive a reboot, probably" | 🗄️ Adulting |
+| **Data Transformation** | Unit conversion, scaling, computed tags | "Math is a protocol now, fight me" | 🧮 Deranged |
 
-# Install the chart
-helm install emberburn emberburn/emberburn
-```
+All of these run **simultaneously**. At the same time. In the same process. Like a one-man-band at the intersection of DevOps and industrial automation. Is it beautiful? Debatable. Does it work? Absolutely. Will I add more? My keyboard is warm and my impulse control is nonexistent.
 
-**Dependencies:**
-- `opcua` - OPC UA server implementation
-- `paho-mqtt` - MQTT client for publishing
-- `flask` - REST API server
-- `flask-cors` - CORS support for web clients
-- `websocket-server` - WebSocket support (future expansion)
+## The Tag System (Where the Magic Happens)
 
-### Running the Server
+Tags are the heartbeat of any industrial system, and Emberburn lets you define them all through JSON config files because YAML had its chance and blew it.
 
-```bash
-# Basic usage (OPC UA only, no publishers)
-python opcua_server.py
+Every tag gets:
+- **A data type** — `float`, `int`, `string`, `bool` — because the real world has variety
+- **A simulation mode** — how the value changes over time:
+  - `random` — Chaotic. Unpredictable. Like your sprint velocity.
+  - `sine` — Smooth, oscillating, beautiful. Engineers get unreasonably excited about this one.
+  - `increment` — Goes up. Resets at max. Repeat. The Sisyphus of simulation modes.
+  - `static` — Doesn't change. For when you want your simulation to have the personality of a brick.
+- **Min/max bounds** — Keep your fake data within the realm of plausibility (or don't, I'm not your dad)
+- **Metadata** — Engineering units, descriptions, alarm thresholds, whatever you want to slap on there
 
-# With MQTT and REST API enabled (use the new config file)
-python opcua_server.py -c config/config_with_mqtt.json
-
-# With custom config file
-python opcua_server.py -c config/example_tags_manufacturing.json
-
-# Debug mode (for when things inevitably break)
-python opcua_server.py -l DEBUG
-
-# Custom update interval
-python opcua_server.py -i 0.5
-```
-
-The server starts at `opc.tcp://0.0.0.0:4840/freeopcua/server/` by default.
-
-**When publishers are enabled:**
-- **MQTT**: Publishes to `industrial/opcua/<tag_name>` (configurable)
-- **REST API**: Available at `http://localhost:5000/api/tags`
-
-## Configuration
-
-Tags and publishers are configured via JSON files. Check out [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for the full documentation (yes, we actually wrote docs).
-
-### Configuration Structure (New!)
+Here's the vibe:
 
 ```json
 {
   "tags": {
-    // Your tag definitions go here
-  },
-  "publishers": {
-    "mqtt": {
-      "enabled": true,
-      "broker": "localhost",
-      "port": 1883,
-      "topic_prefix": "industrial/opcua"
+    "Reactor_Temperature": {
+      "type": "float",
+      "initial_value": 350.0,
+      "simulate": true,
+      "simulation_type": "sine",
+      "min": 300.0,
+      "max": 400.0,
+      "description": "If this hits 500 we have bigger problems"
     },
-    "rest_api": {
-      "enabled": true,
-      "host": "0.0.0.0",
-      "port": 5000
+    "Emergency_Stop": {
+      "type": "bool",
+      "initial_value": false,
+      "simulate": false,
+      "description": "The panic button. Static. Please stay false."
     }
   }
 }
 ```
 
-**Note**: Old configuration files (without the `tags` wrapper) are still supported for backward compatibility.
+We've got example configs for days in the [config/](config/) directory — simple setups, full manufacturing simulations, process control scenarios, multi-protocol configs. Pick one, run it, feel powerful.
 
-### Basic Tag Example
+## The Web UI (It's Gorgeous and I'm Not Humble About It)
 
-```json
-{
-  "Temperature": {
-    "type": "float",
-    "initial_value": 20.0,
-    "simulate": true,
-    "simulation_type": "random",
-    "min": 15.0,
-    "max": 25.0,
-    "description": "Ambient temperature in Celsius"
-  },
-  "Counter": {
-    "type": "int",
-    "initial_value": 0,
-    "simulate": true,
-    "simulation_type": "increment",
-    "increment": 1,
-    "max": 1000,
-    "reset_on_max": true,
-    "description": "Production counter with rollover"
-  }
-}
+Emberburn ships with a full **Python Flask web application** — fire-themed dark mode, real-time dashboards, the works. No React. No webpack. No `node_modules` folder that weighs more than your actual code. Just Flask, Jinja2 templates, and vanilla JavaScript like the founding fathers intended.
+
+**What you get:**
+- 📊 **Dashboard** — Live metrics, tag counts, publisher statuses, and a general sense of accomplishment
+- 🏷️ **Tag Monitor** — Every tag, every value, updating in real-time. It's like watching the Matrix but for industrial data.
+- 📡 **Publishers** — See which protocols are running, enable/disable them, feel like a DJ mixing data streams
+- 🚨 **Alarms** — Active alerts, alarm history, threshold configuration. Sleep is overrated anyway.
+- ⚙️ **Configuration** — Edit settings without touching JSON files. We're civilized now.
+- 🏗️ **Tag Generator** — Create new OPC UA tags from the browser. Point and click your way to industrial simulation.
+
+The UI updates every 2 seconds because real-time means REAL TIME, and it's all wrapped in a dark mode fire aesthetic because we're EmberBurn, not EmberBoring.
+
+## Architecture (For the Diagram People)
+
+```
+                        ┌─────────────────────────┐
+                        │   JSON Configuration     │
+                        │   (tags + publishers)     │
+                        └────────────┬────────────┘
+                                     │
+                                     ▼
+                        ┌─────────────────────────┐
+                        │   OPC UA Server (Core)   │
+                        │   Generates & manages    │
+                        │   simulated tag data     │
+                        └────────────┬────────────┘
+                                     │
+                                     ▼
+                        ┌─────────────────────────┐
+                        │   Publisher Manager       │
+                        │   "The Traffic Cop"       │
+                        └────────────┬────────────┘
+                                     │
+            ┌──────────┬─────────┬───┴───┬─────────┬──────────┐
+            ▼          ▼         ▼       ▼         ▼          ▼
+         ┌──────┐ ┌────────┐ ┌──────┐ ┌──────┐ ┌───────┐ ┌────────┐
+         │ MQTT │ │  REST  │ │Kafka │ │MODBUS│ │GraphQL│ │InfluxDB│
+         └──────┘ └────────┘ └──────┘ └──────┘ └───────┘ └────────┘
+            │         │         │        │         │          │
+     ...and Sparkplug B, AMQP, WebSocket, OPC UA Client,
+        Prometheus, Alarms, SQLite, Data Transforms...
+
+                        ┌─────────────────────────┐
+                        │   🔥 EmberBurn Web UI    │
+                        │   Flask + Jinja2 + JS    │
+                        │   (fire-themed, yes)     │
+                        └─────────────────────────┘
 ```
 
-### Example Configs
+The OPC UA server is the brain. The Publisher Manager is the nervous system. Everything else is just... appendages we keep growing. Each publisher runs independently in its own thread. If one dies, the others keep vibing. It's the cockroach architecture — unkillable, persistent, slightly unnerving.
 
-We've included some ready-to-use configurations in the [config/](config/) directory:
-- `example_tags_simple.json` - Basic setup for beginners
-- `example_tags_manufacturing.json` - Production line simulation
-- `example_tags_process_control.json` - Process control scenarios
-- `config_with_mqtt.json` - **NEW!** Full config with MQTT and REST API enabled
+All publishers are **opt-in via config**. Don't want Kafka? Don't enable it. Don't have a RabbitMQ instance? Cool, AMQP stays asleep. The app only loads what you ask for. We're chaotic, not wasteful.
 
-## Data Publishers
+## Deployment (Many Flavors of "Run This Thing")
 
-### MQTT Publisher
+**Docker?** Yep. Multi-arch images for AMD64 and ARM64. Run it on a Raspberry Pi, an AWS Graviton instance, your M-series Mac, or that mysterious server in the closet that nobody admits to owning.
 
-Publish tag values to any MQTT broker in real-time!
+**Kubernetes/Helm?** Obviously. There's a full Helm chart with configurable values, persistent volume claims, service definitions, and enough YAML to make your eyes bleed (ironic, I know, since I trash-talked YAML earlier).
 
-**Configuration:**
-```json
-{
-  "publishers": {
-    "mqtt": {
-      "enabled": true,
-      "broker": "localhost",          // MQTT broker address
-      "port": 1883,                    // MQTT broker port
-      "client_id": "opcua_server",     // Client identifier
-      "username": "",                  // Optional authentication
-      "password": "",
-      "use_tls": false,                // Enable TLS/SSL
-      "topic_prefix": "industrial/opcua",  // Topic prefix
-      "command_topic": "industrial/opcua/commands",  // For write-backs
-      "payload_format": "json",        // "json" or "string"
-      "qos": 1,                        // QoS level (0, 1, or 2)
-      "retain": false                  // Retain messages
-    }
-  }
-}
-```
+**Systemd?** Old school, I respect it. Service files included. Set it and forget it like a crockpot.
 
-**MQTT Topics:**
-- Published data: `industrial/opcua/<tag_name>`
-- Example: `industrial/opcua/Temperature` → `{"tag": "Temperature", "value": 22.5, "timestamp": 1736476800}`
-
-**Test with mosquitto:**
-```bash
-# Subscribe to all tag updates
-mosquitto_sub -h localhost -t "industrial/opcua/#" -v
-
-# Publish a command (future feature - write-back)
-mosquitto_pub -h localhost -t "industrial/opcua/commands/Temperature" -m "25.0"
-```
-
-### REST API Publisher
-
-Query and control tags via HTTP endpoints!
-
-**Configuration:**
-```json
-{
-  "publishers": {
-    "rest_api": {
-      "enabled": true,
-      "host": "0.0.0.0",   // Listen on all interfaces
-      "port": 5000          // API port
-    }
-  }
-}
-```
-
-**API Endpoints:**
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/tags` | Get all tag values |
-| `GET` | `/api/tags/<tag_name>` | Get specific tag value |
-| `POST/PUT` | `/api/tags/<tag_name>` | Write tag value (future) |
-| `GET` | `/api/health` | Health check |
-
-**Examples:**
-```bash
-# Get all tags
-curl http://localhost:5000/api/tags
-
-# Get specific tag
-curl http://localhost:5000/api/tags/Temperature
-
-# Write to a tag (if write callback is implemented)
-curl -X POST http://localhost:5000/api/tags/Temperature \
-  -H "Content-Type: application/json" \
-  -d '{"value": 25.0}'
-```
-
-**Response Format:**
-```json
-{
-  "tags": {
-    "Temperature": {
-      "value": 22.5,
-      "timestamp": 1736476800.123
-    },
-    "Pressure": {
-      "value": 101.3,
-      "timestamp": 1736476800.123
-    }
-  },
-  "count": 2
-}
-```
+**Just... Python?** `pip install -r requirements.txt` and `python opcua_server.py`. You're an adult. I believe in you.
 
 ## Environment Variables
 
-Customize the server without touching code (the dream):
+For the "I refuse to edit config files" crowd (honestly, same):
 
-| Variable | Default | Description |
+| Variable | Default | What It Does |
 |----------|---------|-------------|
-| `OPC_ENDPOINT` | `opc.tcp://0.0.0.0:4840/freeopcua/server/` | Server endpoint URL |
-| `OPC_SERVER_NAME` | `Python OPC UA Server` | Server display name |
+| `OPC_ENDPOINT` | `opc.tcp://0.0.0.0:4840/freeopcua/server/` | Where the OPC UA server lives |
+| `OPC_SERVER_NAME` | `Python OPC UA Server` | The name your clients see |
 | `OPC_NAMESPACE` | `http://opcua.edge.server` | OPC UA namespace URI |
-| `OPC_DEVICE_NAME` | `EdgeDevice` | Device/folder name in OPC UA tree |
-| `UPDATE_INTERVAL` | `2` | Tag update interval in seconds |
+| `OPC_DEVICE_NAME` | `EdgeDevice` | Device folder in the OPC UA tree |
+| `UPDATE_INTERVAL` | `2` | How often tags update (seconds). Set to 0.1 if you hate your CPU. |
 
-## Running as a Service
+## Documentation (We Actually Wrote Some)
 
-Because manually starting things is so 2015.
+Look, I know nobody reads docs. But if you're going to ignore them, at least ignore the *right* ones:
 
-### Linux (systemd)
+**Understanding the System:**
+- [Architecture Overview](docs/ARCHITECTURE_OVERVIEW.md) — How all the pieces fit together (with diagrams and everything)
+- [Configuration Guide](docs/CONFIGURATION.md) — Every knob, switch, and lever explained
+- [Multi-Protocol Summary](docs/MULTI_PROTOCOL_SUMMARY.md) — All 15 protocols, side by side, questioning my life choices
+- [Protocol Comparison Guide](docs/PROTOCOL_GUIDE.md) — "Which protocol should I use?" answered once and for all
 
-```bash
-# Copy service file
-sudo cp systemd/opcua-server.service /etc/systemd/system/
+**The Web UI:**
+- [EmberBurn Web UI Guide](docs/PYTHON_WEB_APP.md) — The Flask app in all its fire-themed glory
+- [Web UI Features](docs/WEB_UI.md) — Complete feature documentation
+- [Web UI Quick Start](docs/WEB_UI_QUICKSTART.md) — 60 seconds to dashboard nirvana
 
-# Edit paths in the service file to match your installation
-sudo nano /etc/systemd/system/opcua-server.service
+**Integration Guides (Pick Your Poison):**
+- [Ignition Edge](docs/IGNITION_INTEGRATION.md) — Sparkplug B + OPC UA Client for Inductive's ecosystem
+- [Node-RED](docs/NODERED_INTEGRATION.md) — Flow-based programming for the visual thinkers
+- [MODBUS](docs/MODBUS_INTEGRATION.md) — Legacy PLC integration (1979 called, it wants its protocol back... but it still works)
+- [OPC UA Client Mode](docs/OPCUA_CLIENT_INTEGRATION.md) — Push data to other OPC UA servers
+- [GraphQL](docs/GRAPHQL_INTEGRATION.md) — For when REST feels too pedestrian
+- [InfluxDB + Grafana](docs/INFLUXDB_GRAFANA_INTEGRATION.md) — Time-series storage and those dashboards your boss loves
+- [Alarms & Notifications](docs/ALARMS_NOTIFICATIONS.md) — Get yelled at by email, Slack, or SMS when thresholds breach
 
-# Enable and start
-sudo systemctl enable opcua-server
-sudo systemctl start opcua-server
-
-# Check status
-sudo systemctl status opcua-server
-```
-
-### Using the Management Script
-
-```bash
-# Install as service
-./scripts/manage.sh install
-
-# Start/stop/restart
-./scripts/manage.sh start
-./scripts/manage.sh stop
-./scripts/manage.sh restart
-
-# View logs
-./scripts/manage.sh logs
-```
-
-## Requirements
-
-- Python 3.6+ (because we live in the future)
-- opcua library - OPC UA server
-- paho-mqtt - MQTT publishing
-- flask - REST API server
-- flask-cors - CORS support
-- websocket-server - Future WebSocket support
+**Advanced Stuff:**
+- [Data Transformation](docs/DATA_TRANSFORMATION.md) — Unit conversions, scaling, computed tags
+- [Prometheus Integration](docs/PROMETHEUS_INTEGRATION.md) — Monitor the thing that monitors things (inception)
+- [SQLite Persistence](docs/SQLITE_PERSISTENCE.md) — Because data should survive a reboot
+- [ARM64 Deployment](docs/ARM64_DEPLOYMENT.md) — Running on ARM because x86 is basic
 
 ## Project Structure
 
 ```
-├── opcua_server.py              # Main server implementation
-├── publishers.py                # NEW: Multi-protocol publishers (MQTT, REST, etc.)
-├── tags_config.json             # Default tag configuration
-├── requirements.txt             # Dependencies
-├── config/
-│   ├── config_with_mqtt.json   # NEW: Full config with all publishers
-│   ├── example_tags_*.json     # Example tag configurations
-├── docs/                        # Documentation
-├── scripts/                     # Utility scripts
-└── systemd/                     # Service files
+├── opcua_server.py       # The brain. Main OPC UA server + tag simulation engine.
+├── publishers.py         # 3,800 lines of publisher madness. Every protocol lives here.
+├── web_app.py            # Flask web UI blueprint. Fire-themed. No apologies.
+├── tags_config.json      # Default tag config for the commitment-phobic.
+├── requirements.txt      # The dependency party guest list.
+├── Dockerfile            # Containerize it. Ship it. Forget it.
+├── config/               # Pre-built configs for every scenario imaginable.
+├── docs/                 # Extensive docs. Yes, really. I'm as surprised as you.
+├── helm/                 # Kubernetes Helm chart. Enterprise-ready (allegedly).
+├── static/               # CSS, JS, images for the web UI.
+├── templates/            # Jinja2 templates. Server-side rendering like it's 2012 (complimentary).
+├── scripts/              # Build scripts, install scripts, management scripts.
+├── systemd/              # Service files for the systemd faithful.
+└── web/                  # Static web assets.
 ```
-
-## Common Use Cases
-
-- **Development**: Test your OPC UA client without hardware
-- **Demos**: Impress stakeholders with "live" data that never fails
-- **Integration Testing**: Validate SCADA/HMI integrations
-- **Training**: Teach OPC UA concepts without expensive PLCs
-- **MQTT Integration**: Bridge OPC UA to MQTT-based systems (IoT, cloud platforms)
-- **Multi-Protocol Testing**: Test systems that consume data from multiple sources
-- **REST API Access**: Web dashboards and modern applications
-- **Chaos Engineering**: Because why not?
-
-## Architecture
-
-The server now supports a **modular publisher architecture**:
-
-```
-OPC UA Server (Core)
-    ↓
-Publisher Manager
-    ├─→ MQTT Publisher → MQTT Broker → IoT Devices/Cloud
-    ├─→ REST API Publisher → HTTP Clients/Web Apps
-    ├─→ WebSocket Publisher (Coming Soon) → Real-time Web UIs
-    └─→ InfluxDB Publisher (Future) → Time-Series Database
-```
-
-All publishers run simultaneously and independently. Enable/disable any publisher via configuration without code changes.
-
-## Troubleshooting
-
-**Server won't start?**
-- Check if port 4840 is already in use: `netstat -an | grep 4840`
-- Verify Python version: `python --version`
-- Check the logs with `-l DEBUG` flag
-
-**Tags not updating?**
-- Ensure `"simulate": true` is set in your config
-- Verify your `simulation_type` is valid
-- Check the `UPDATE_INTERVAL` isn't set to something ridiculous
-
-**Can't connect from client?**
-- Firewall blocking port 4840? (Classic.)
-- Using the right endpoint URL?
-- Server actually running? (Don't @ us.)
 
 ## Contributing
 
-Found a bug? Have an idea? PRs welcome. Please include:
+Found a bug? Feature idea? Existential crisis about protocol selection? PRs are welcome. Just include:
 - What you changed and why
-- Tests if applicable (we believe in you)
-- Your favorite industrial automation horror story
-- Have an idea? Let me know!
+- Tests if you're feeling heroic
+- Your worst industrial automation horror story (mandatory)
 
-## Documentation
-
-**Core Guides:**
-- [Configuration Guide](docs/CONFIGURATION.md) - Complete tag and publisher configuration
-- [Architecture Overview](docs/ARCHITECTURE_OVERVIEW.md) - System architecture and data flow
-- [Multi-Protocol Summary](docs/MULTI_PROTOCOL_SUMMARY.md) - All 15 protocols explained
-- [Prometheus Integration](docs/PROMETHEUS_INTEGRATION.md) - Operational metrics and monitoring
-- [SQLite Persistence](docs/SQLITE_PERSISTENCE.md) - Historical data storage and audit logging
-- [Data Transformation](docs/DATA_TRANSFORMATION.md) - Unit conversions, scaling, and computed tags ⭐ NEW!
-- [Protocol Comparison Guide](docs/PROTOCOL_GUIDE.md) - Which protocol for which job?
-- **[🔥 EmberBurn Web UI](docs/PYTHON_WEB_APP.md) - Python Flask web application guide** ⭐ NEW!
-- [Web UI Features](docs/WEB_UI.md) - Complete UI feature documentation
-- [Web UI Quick Start](docs/WEB_UI_QUICKSTART.md) - 60-second start guide
-
-**Integration Guides:**
-- [Ignition Edge Integration](docs/IGNITION_INTEGRATION.md) - Sparkplug B + OPC UA Client setup
-- [Node-RED Integration](docs/NODERED_INTEGRATION.md) - Flow-based programming
-- [MODBUS Integration](docs/MODBUS_INTEGRATION.md) - Legacy PLC integration
-- [OPC UA Client Mode](docs/OPCUA_CLIENT_CONFIGURATION.md) - Push to other OPC UA servers
-- [GraphQL Integration](docs/GRAPHQL_INTEGRATION.md) - Modern query interface
-- [InfluxDB + Grafana](docs/INFLUXDB_GRAFANA_INTEGRATION.md) - Time-series storage and visualization
-- [Alarms & Notifications](docs/ALARMS_NOTIFICATIONS.md) - Alerting via email/Slack/SMS
-
-All docs written in Patrick Ryan's signature style - snarky but helpful.
-
-## Quick Start with Web UI 🔥
-
-**The easiest way to get started** - Proper Python Flask web application:
-
-1. **Start the server:**
-   ```bash
-   python opcua_server.py -c config/config_web_ui.json
-   ```
-
-2. **Open your browser:**
-   ```
-   http://localhost:5000/
-   ```
-
-3. **Explore the UI:**
-   - 📊 **Dashboard** - Live metrics and tag values
-   - 🏷️ **Tag Monitor** - Complete tag listing
-   - 📡 **Publishers** - Enable/disable protocols
-   - 🚨 **Alarms** - Active alarm monitoring
-   - ⚙️ **Configuration** - System settings
-
-**Features:**
-- ✅ Python Flask Blueprint architecture
-- ✅ Jinja2 server-side templates
-- ✅ Vanilla JavaScript (no build step!)
-- ✅ Fire-themed dark mode design
-- ✅ Real-time updates (2-second intervals)
-- ✅ ASCII art branding (Fireball Industries + EmberBurn)
-
-See [docs/PYTHON_WEB_APP.md](docs/PYTHON_WEB_APP.md) for complete setup and customization.
+Seriously though — if you have an idea, open an issue. The bar for "should we add this" is apparently on the floor, as evidenced by the 15 protocols currently in this repo.
 
 ## License
 
-MIT License - Do whatever you want with this. We're not your mom.
+**MIT** — Do literally whatever you want with this. Fork it, ship it, tattoo the source code on your body. I'm not your mom and this is not legal advice.
 
-## Acknowledgments
+## One Last Thing
 
-Built with [python-opcua](https://github.com/FreeOpcUa/python-opcua) because reinventing the wheel is overrated.
+This project started as a weekend hack to test some Ignition tags. It now has more protocols than most enterprise integration platforms, a full web UI, Helm charts, multi-arch Docker images, and documentation that I actually maintain. Feature creep isn't a bug — it's a lifestyle.
+
+If Emberburn saves you from plugging your laptop into a production PLC and accidentally shutting down a conveyor belt (ask me how I know), then it was all worth it.
+
+Star the repo if you're feeling generous. Open an issue if you're feeling brave. Add another protocol if you're feeling unhinged.
+
+**Let's go.** 🔥
 
 ---
 
-*Made with ☕ and mild existential dread about industrial automation security*
+*Built by Patrick Ryan @ [Fireball Industries](https://github.com/embernet-ai) with mass quantities of caffeine, mass quantities of mass existential dread about industrial cybersecurity, and a mass refusal to stop adding protocols.*
+
+*Made with ☕ and the kind of ambition that borders on a personality disorder.*
