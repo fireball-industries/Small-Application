@@ -6,7 +6,7 @@ Author: Patrick Ryan, CTO - Fireball Industries
 License: MIT
 """
 
-from flask import Blueprint, render_template, jsonify, request
+from flask import Blueprint, render_template, jsonify, request, redirect, url_for
 import logging
 
 # Create Blueprint for web UI
@@ -26,8 +26,8 @@ def index():
 
 @web_ui.route('/dashboard')
 def dashboard():
-    """Dashboard view."""
-    return render_template('dashboard.html')
+    """Dashboard view - redirect to main index."""
+    return redirect(url_for('web_ui.index'))
 
 
 @web_ui.route('/tags')
